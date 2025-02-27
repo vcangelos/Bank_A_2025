@@ -10,7 +10,7 @@ class Card {
         this.cardNumber = cardNumber;
     }
 
-// Credit card network #
+    // Credit card network #
     String getCardType() {
         char firstDigit = cardNumber.charAt(0);
 
@@ -29,12 +29,12 @@ class ExtendedCard extends Card {
         super(cardNumber);
     }
 
-// CVC generater
+    // CVC generator
     String generateCVC() {
         return String.format("%03d", random.nextInt(1000));
     }
 
-// Exiration generator 2025-2030
+    // Expiration generator 2025-2030
     String generateExpirationDate() {
         int month = random.nextInt(12) + 1;
         int year = random.nextInt(6) + 25;
@@ -42,17 +42,16 @@ class ExtendedCard extends Card {
     }
 }
 
-
 class BankSecurity {
     private static final Random random = new Random();
     private static String storedHashedPin;
 
-// 4 digit card pin generator
+    // 4-digit card pin generator
     public static String generateCardPin() {
         return String.valueOf(1000 + random.nextInt(9000));
     }
 
-// Hashes Pin
+    // Hashes PIN
     public static String hashPin(String pin) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -67,23 +66,27 @@ class BankSecurity {
         }
     }
 
-// Stores hashed pin
+    // Stores hashed pin
     public static void setAccountPin(String pin) {
         storedHashedPin = hashPin(pin);
     }
 
-// Validates pin
+    // Validates pin
     public static boolean validatePin(String enteredPin) {
         return hashPin(enteredPin).equals(storedHashedPin);
     }
 }
 
-// test class
+// Test class
 public class BankSystem {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-// User chooses card type
+        // Ask for cardholder's name
+        System.out.print("Enter the cardholder's name: ");
+        String cardholderName = scanner.nextLine();
+
+        // User chooses card type
         System.out.println("Select your Card Type:");
         System.out.println("1. American Express");
         System.out.println("2. Visa");
@@ -93,31 +96,32 @@ public class BankSystem {
         int choice = scanner.nextInt();
         scanner.nextLine();
 
-// Check if the choice is valid
+        // Check if the choice is valid
         if (choice < 1 || choice > 4) {
             System.out.println("Invalid input! Please enter a number between 1 and 4.");
             scanner.close();
             return;
         }
 
-// generate card
+        // Generate card
         ExtendedCard card = new ExtendedCard(generateCardNumber(choice));
+        System.out.println("\nCardholder Name: " + cardholderName);
         System.out.println("Card Type: " + card.getCardType());
         System.out.println("Card Number: " + card.cardNumber);
         System.out.println("CVC: " + card.generateCVC());
         System.out.println("Expiration Date: " + card.generateExpirationDate());
 
-// Generate pin
+        // Generate PIN
         String cardPin = BankSecurity.generateCardPin();
         System.out.println("Generated Card PIN: " + cardPin);
 
-// "set pin"
+        // "Set PIN"
         System.out.print("Set your Account PIN (4-digit): ");
         String accountPin = scanner.nextLine();
         BankSecurity.setAccountPin(accountPin);
         System.out.println("Account PIN set successfully.");
 
-// Verify pin
+        // Verify PIN
         System.out.print("Enter your Account PIN to verify: ");
         String enteredPin = scanner.nextLine();
         if (BankSecurity.validatePin(enteredPin)) {
@@ -130,15 +134,15 @@ public class BankSystem {
         scanner.close();
     }
 
-// generates card # from company#
+    // Generates card # from company #
     private static String generateCardNumber(int choice) {
         Random random = new Random();
         StringBuilder cardNumber = new StringBuilder();
 
-// Assign the first digit based on user choice
+        // Assign the first digit based on user choice
         char firstDigit;
         if (choice == 1) {
-            firstDigit = '3';  // (American express)
+            firstDigit = '3';  // (American Express)
         } else if (choice == 2) {
             firstDigit = '4';  // (Visa)
         } else if (choice == 3) {
@@ -149,7 +153,6 @@ public class BankSystem {
 
         cardNumber.append(firstDigit);
 
-
         for (int i = 1; i < 16; i++) {
             cardNumber.append(random.nextInt(10));
         }
@@ -157,3 +160,4 @@ public class BankSystem {
         return cardNumber.toString();
     }
 }
+
