@@ -82,9 +82,11 @@ public class BankSystem {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        // Ask for cardholder's name
-        System.out.print("Enter the cardholder's name: ");
-        String cardholderName = scanner.nextLine();
+        // Ask for cardholder's first and last name
+        System.out.print("Enter the cardholder's first name: ");
+        String firstName = scanner.nextLine();
+        System.out.print("Enter the cardholder's last name: ");
+        String lastName = scanner.nextLine();
 
         // User chooses card type
         System.out.println("Select your Card Type:");
@@ -105,7 +107,7 @@ public class BankSystem {
 
         // Generate card
         ExtendedCard card = new ExtendedCard(generateCardNumber(choice));
-        System.out.println("\nCardholder Name: " + cardholderName);
+        System.out.println("\nCardholder Name: " + firstName + " " + lastName);
         System.out.println("Card Type: " + card.getCardType());
         System.out.println("Card Number: " + card.cardNumber);
         System.out.println("CVC: " + card.generateCVC());
@@ -160,4 +162,3 @@ public class BankSystem {
         return cardNumber.toString();
     }
 }
-
