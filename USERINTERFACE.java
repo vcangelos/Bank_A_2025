@@ -11,10 +11,13 @@ import java.util.Scanner; //to read the CSV file
 
 
 
-//still left to do: continue user sign in and sign up so they can change info(almost done)
-//use the append and adduser methods to modify CSV,
-//set up forget password and verification 
 
+//To DO:
+//user options after the sign ins
+//logging out
+//forgot password verification 
+//to change userinfo using the verification
+//signing out input( it already  brings the user back to welcome just adding the option for the user to return manually instead of automatically)
 
 
 
@@ -30,6 +33,7 @@ public class Main {
             while(!valid){// User must have valid response so he doesnt glitch the code
                 String signinorsignup = JOptionPane.showInputDialog(null,"Welcome Would you like to sign in or sign up?");
             signinorsignup.toLowerCase();
+            signinorsignup = signinorsignup.replace(" ","");// replaces spaces ex: Sign in becomes Signin(edgecasing)
             if(signinorsignup.equalsIgnoreCase("Signup")){
 
                 String username=JOptionPane.showInputDialog(null, "Welcome To the bank Please enter your Username" );
@@ -62,29 +66,43 @@ public class Main {
 
                 valid =true;
             }else if (signinorsignup.equalsIgnoreCase("SignIn")){ // STILL IN WORK GOTTA DO CSV FILE FIRST
-                String username=JOptionPane.showInputDialog(null, "Welcome To the bank Please enter your Username" );
+                String username = JOptionPane.showInputDialog(null, "Welcome To the bank Please enter your Username");
 
+    // Assuming users() is a method that retrieves user data based on the username
                 UserData user = users(username);
-                while(user==null){
-                    if (user != null) {
-                    System.out.println("User found:");
-                } else {
-                     username=JOptionPane.showInputDialog(null, "Your username was not found Please enter your Username" );
-                     user = users(username);
+
+                // While loop to check if the username is found and keeps going so you cant break it
+                while(user == null){
+                    username = JOptionPane.showInputDialog(null, "Your username was not found. Please enter your Username");
+                    user = users(username); // Fetch user data based on entered username
                 }
-                    String password=JOptionPane.showInputDialog(null,"HEllO "+username +" Please enter your Password");
-                    String truePassword=user.getPassword();
-                    if(truePassword.equals(password)){
-                        
-                        String choice=JOptionPane.showInputDialog(null,"Hi!"+ user.getFirstname(), "Would you like to change your infomation?");
+
+
+                    String password = JOptionPane.showInputDialog(null,"Hello " + username + " Please enter your Password");
+                    String truePassword = user.getPassword(); // Fetch stored password for comparison
+
+                    // Remove spaces from entered password
+                    String forgotpassword=password;
+                    forgotpassword.replace(" ","");
+
+                    int passwordmatch = -1;
+                    while (passwordmatch < 0){
+                        if(truePassword.equals(password)){
+                            JOptionPane.showMessageDialog(null,"Welcome To the bank, " + user.getFirstname() + "!");
+                            passwordmatch = 1;  //exits the loop
+                        }else if(forgotpassword.equalsIgnoreCase("forgotpassword")){
+                            String choice = JOptionPane.showInputDialog(null,"Still workingon it");
+
+
+                        }else{
+                            JOptionPane.showMessageDialog(null,"Wrong Password please try again or say forgotpassword");
+                             password = JOptionPane.showInputDialog(null,"Hello " + username + " Please enter your Password");
+                             forgotpassword=password;
+                             forgotpassword=forgotpassword.replace(" ","");
+                        }
                     }
 
-
-                }
-
-
-
-                valid =true;
+                    valid = true;
             }else{
                 JOptionPane.showMessageDialog(null, "Invalid Input");
 
