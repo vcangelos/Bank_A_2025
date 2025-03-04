@@ -1,20 +1,29 @@
 import javax.swing.*;// FOR THE GUI'S ( I learned this last year during my create task for CSP)
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.util.Random;// for unique ID
+
 import java.util.Scanner; //to read the CSV file
 //https://www.youtube.com/watch?v=-95U3CZPlE8 referenced for reading the CSV FILE
 
 //https://www.youtube.com/watch?v=TpyRKom0X_s to edit certain parts of CSV TO DO!
 
+
+
+//still left to do: continue user sign in and sign up so they can change info(almost done)
+//use the append and adduser methods to modify CSV,
+//set up forget password and verification 
+
+
+
+
+
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-public class USERINTERFACE {
+public class Main {
     public static void main(String[] args) throws FileNotFoundException { //FileNotFoundException happens if file isnt in the src
-
-
         
-
         int rerun=-3;
         while (rerun!=-1){//so user can return to welcome page
             Boolean valid=false;
@@ -48,12 +57,33 @@ public class USERINTERFACE {
                     minimumdeposit=Double.parseDouble(minimumdeppositinput);
 
                 }
+                int ID=genid();
 
 
                 valid =true;
             }else if (signinorsignup.equalsIgnoreCase("SignIn")){ // STILL IN WORK GOTTA DO CSV FILE FIRST
                 String username=JOptionPane.showInputDialog(null, "Welcome To the bank Please enter your Username" );
-                String password=JOptionPane.showInputDialog(null,"HEllO "+username +" Please enter your Password");
+
+                UserData user = users(username);
+                while(user==null){
+                    if (user != null) {
+                    System.out.println("User found:");
+                } else {
+                     username=JOptionPane.showInputDialog(null, "Your username was not found Please enter your Username" );
+                     user = users(username);
+                }
+                    String password=JOptionPane.showInputDialog(null,"HEllO "+username +" Please enter your Password");
+                    String truePassword=user.getPassword();
+                    if(truePassword.equals(password)){
+                        
+                        String choice=JOptionPane.showInputDialog(null,"Hi!"+ user.getFirstname(), "Would you like to change your infomation?");
+                    }
+
+
+                }
+
+
+
                 valid =true;
             }else{
                 JOptionPane.showMessageDialog(null, "Invalid Input");
@@ -81,6 +111,120 @@ public class USERINTERFACE {
         }
         return id.toString().hashCode(); // Chatgpt by debugging, so it's readable
     }
+    //to add new user data
+        public static void addUser(String username, String password, String firstname, String lastname, int ssn, String dob, String email, long phone, double minimumdeposit) throws FileNotFoundException {
+            // Scanner to read existing CSV
+            Scanner csvreader = new Scanner(new File("src/UserData.csv"));
+            File tempFile = new File("src/temp.csv");// I orignally had this as a file manually added in the beginning  but I realized it would be better to create this in the method and delete the UserData that we had before
+            // PrintWriter to write to temp.csv
+            PrintWriter out = new PrintWriter(new File("src/temp.csv"));
+
+
+            // Copy existing data from UserData.csv to temp.csv
+            while (csvreader.hasNextLine()) {
+                String line = csvreader.nextLine().trim();
+                String[] UserDatacopier = line.split(",");
+
+
+                for (int i = 0; i < UserDatacopier.length; i++) {
+                    UserDatacopier[i] = UserDatacopier[i].trim();
+                }
+
+                // Write the formatted data back to temp.csv
+                out.println(String.join(",", UserDatacopier));
+            }
+
+            // From video referenced in beginning
+            out.println(String.join(",", username, password, firstname, lastname, Integer.toString(ssn), dob, email, Long.toString(phone), Double.toString(minimumdeposit)));
+
+            // Close resources since they wont be used unless the method is called
+            csvreader.close();
+            out.close();
+            File userDataFile = new File("src/UserData.csv");
+            userDataFile.delete();
+            tempFile.renameTo(new File("src/UserData.csv"));
+
+
+
+        }
+
+
+        // to replace user data
+        public static void AppendCSV( String Keyword, int Index, String replacement) throws FileNotFoundException {
+            Scanner csvreader = new Scanner(new File("src/UserData.csv"));
+            File tempFile = new File("src/temp.csv");
+            PrintWriter out = new PrintWriter(tempFile);
+
+            // Copy existing data from UserData.csv to temp.csv
+            while (csvreader.hasNextLine()) {
+                String line = csvreader.nextLine().trim();
+                if (!line.isEmpty()) {  // Skip empty lines
+                    String[] UserDatacopier = line.split(",");
+
+
+                    // Trim each column value
+                    for (int i = 0; i < UserDatacopier.length; i++) {
+                        UserDatacopier[i] = UserDatacopier[i].trim();
+                        if (UserDatacopier[Index].equals(Keyword)) {// Replace the old at the  index if it matches the keyword
+                        UserDatacopier[Index] = replacement;
+                        }
+                    }
+
+
+
+
+                        // Write the updated data back to temp.csv
+                    out.println(String.join(",", UserDatacopier));// writes every line to the tempfile created
+
+                }
+            }
+
+            // Close resources
+            csvreader.close();
+            out.close();
+
+            // Replace the original file with the updated one
+            File originalFile = new File("src/UserData.csv");
+
+        }
+
+
+
+        //for sign ins to retrive user info
+        public static UserData users(String keyword) throws FileNotFoundException {
+            Scanner csvreader = new Scanner(new File("src/userData.csv"));
+            if (csvreader.hasNextLine()) {
+                csvreader.nextLine(); // Skip header row
+            }
+
+            UserData user = null;
+
+            while (csvreader.hasNextLine()) {
+                String line = csvreader.nextLine().trim();
+                String[] UserDataImport = line.split(",");
+
+                // Trim all values in the array
+                for (int i = 0; i < UserDataImport.length; i++) {
+                    UserDataImport[i] = UserDataImport[i].trim();
+                }
+
+                // Directly create a UserData object when a match is found
+                if (UserDataImport[0].equals(keyword)) {
+                    int ssn = Integer.parseInt(UserDataImport[4]); // SSN
+                    long phone = Long.parseLong(UserDataImport[7]); // Phone number
+                    double minimumDeposit = Double.parseDouble(UserDataImport[8]); // Minimum deposit
+                    int uniqueID = Integer.parseInt(UserDataImport[9]);
+
+                    // Creates new object,
+                    user = new UserData(UserDataImport[0], UserDataImport[1], UserDataImport[2], UserDataImport[3], ssn, UserDataImport[5], UserDataImport[6], phone, minimumDeposit,uniqueID);
+
+                    break; //  user is found
+                }
+            }
+
+            csvreader.close();
+            return user; // Returns  UserData object or null
+        }
 
 }
 class UserData {
@@ -91,8 +235,9 @@ class UserData {
     private int ssn;
     private String dob;
     private String email;
-    private int phone;
+    private long phone;
     private int minimumdeposit;
+    private int uniqID;
 
     UserData() {
         this.username = "";
@@ -106,7 +251,7 @@ class UserData {
         this.minimumdeposit = 0;
     }
 
-    UserData(String username, String password, String firstname, String lastname, int ssn, String dob, String email, int phone, double minimumdeposit) {
+    UserData(String username, String password, String firstname, String lastname, int ssn, String dob, String email, long phone, double minimumdeposit,int uniqID) {
         this.username = username;
         this.password = password;
         this.firstname = firstname;
@@ -115,8 +260,64 @@ class UserData {
         this.dob = dob;
         this.email = email;
         this.phone = phone;
+        this.uniqID = uniqID;
 
     }
+    public String getUsername() {
+        return username;
+    }
+    public void setUsername(String username) {
+        this.username = username;
+    }
+    public String getPassword() {
+        return password;
+    }
+    public void setPassword(String password) {
+        this.password = password;
+    }
+    public String getFirstname() {
+        return firstname;
+    }
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
+    }
+    public String getLastname() {
+        return lastname;
+    }
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
+    }
+    public int getSsn() {
+        return ssn;
+    }
+    public void setSsn(int ssn) {
+        this.ssn = ssn;
+    }
+    public String getDob() {
+        return dob;
+    }
+    public String getEmail() {
+        return email;
+    }
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    public long getPhone() {
+        return phone;
+    }
+    public void setPhone(long phone) {
+        this.phone = phone;
+    }
+    public int getMinimumdeposit() {
+        return minimumdeposit;
+    }
+    public void setMinimumdeposit(int minimumdeposit) {
+        this.minimumdeposit = minimumdeposit;
+    }
+    public int getUniqID() {
+        return uniqID;
+    }
+
 
 
 }
