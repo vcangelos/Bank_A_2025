@@ -12,13 +12,7 @@ class Card {
 
     // Credit card network #
     String getCardType() {
-        char firstDigit = cardNumber.charAt(0);
-
-        if (firstDigit == '3') return "American Express";
-        if (firstDigit == '4') return "Visa";
-        if (firstDigit == '5') return "MasterCard";
-        if (firstDigit == '6') return "Discover";
-        return "Unknown";
+        return "Visa";
     }
 }
 
@@ -88,25 +82,8 @@ public class BankSystem {
         System.out.print("Enter the cardholder's last name: ");
         String lastName = scanner.nextLine();
 
-        // User chooses card type
-        System.out.println("Select your Card Type:");
-        System.out.println("1. American Express");
-        System.out.println("2. Visa");
-        System.out.println("3. MasterCard");
-        System.out.println("4. Discover");
-        System.out.print("Enter the number of your choice: ");
-        int choice = scanner.nextInt();
-        scanner.nextLine();
-
-        // Check if the choice is valid
-        if (choice < 1 || choice > 4) {
-            System.out.println("Invalid input! Please enter a number between 1 and 4.");
-            scanner.close();
-            return;
-        }
-
         // Generate card
-        ExtendedCard card = new ExtendedCard(generateCardNumber(choice));
+        ExtendedCard card = new ExtendedCard(generateVisaCardNumber());
         System.out.println("\nCardholder Name: " + firstName + " " + lastName);
         System.out.println("Card Type: " + card.getCardType());
         System.out.println("Card Number: " + card.cardNumber);
@@ -127,8 +104,7 @@ public class BankSystem {
         System.out.print("Enter your Account PIN to verify: ");
         String enteredPin = scanner.nextLine();
         if (BankSecurity.validatePin(enteredPin)) {
-            System.out.println("PIN validation successful!");
-            System.out.println("Access granted to card details.");
+            System.out.println("PIN validation successful! Access granted to card details.");
         } else {
             System.out.println("Incorrect PIN. Access denied.");
         }
@@ -136,29 +112,13 @@ public class BankSystem {
         scanner.close();
     }
 
-    // Generates card # from company #
-    private static String generateCardNumber(int choice) {
+    // Generates Visa card number
+    private static String generateVisaCardNumber() {
         Random random = new Random();
-        StringBuilder cardNumber = new StringBuilder();
-
-        // Assign the first digit based on user choice
-        char firstDigit;
-        if (choice == 1) {
-            firstDigit = '3';  // (American Express)
-        } else if (choice == 2) {
-            firstDigit = '4';  // (Visa)
-        } else if (choice == 3) {
-            firstDigit = '5';  // (MasterCard)
-        } else {
-            firstDigit = '6';  // (Discover)
-        }
-
-        cardNumber.append(firstDigit);
-
+        StringBuilder cardNumber = new StringBuilder("4");
         for (int i = 1; i < 16; i++) {
             cardNumber.append(random.nextInt(10));
         }
-
         return cardNumber.toString();
     }
 }
