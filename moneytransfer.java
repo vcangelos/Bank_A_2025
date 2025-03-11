@@ -111,9 +111,24 @@ public class moneytransfer
         }
 
         // Country
-        System.out.print("Country: ");
+        System.out.print("Country/Continent (Choose from USA, EU, China, UK): ");
         String country = scan.nextLine();
-
+        if (country == "USA")
+        {
+        	
+        }
+        if (country == "EU")
+        {
+        	
+        }
+        if (country == "China")
+        {
+        	
+        }
+        if (country == "UK")
+        {
+        	
+        }
         // Display the collected billing address
         System.out.println("\nBilling Address:");
         System.out.println("Street Address: " + streetAddress);
