@@ -95,19 +95,28 @@ public class checkingtest
 
 			if (checkingOption.equalsIgnoreCase("2"))
 			{
-				System.out.print("How much would you like to deposit?");
-				amount = scan.nextDouble();
+				System.out.print("How much would you like to deposit? ");
+				amount += scan.nextDouble();
 				checking.deposit(amount);
+				lastTransactionDate = new Date();
 			}
         
 			if (checkingOption.equalsIgnoreCase("3"))
 			{
+				System.out.print("How much would you like to withdraw? ");
+				amount -= scan.nextDouble();
 				checking.withdraw();
 			}
         
 			if (checkingOption.equalsIgnoreCase("4"))
 			{
-				
+				System.out.println("Printing out checking account info...");
+				System.out.println("Account Number: " + accountNumber);
+				System.out.println("Account Holder: " + accountHolderName);
+				System.out.println("Overdraft Protection Status: " + isOverdraftProtectionEnabled);
+				System.out.println("Overdraft Limit: " + overdraftLimit);
+				System.out.println("Account Opening Date: " + dateOpened);
+				System.out.println("Date of Last Transaction: " + lastTransactionDate);
 			}
 			
 			if (checkingOption.equalsIgnoreCase("5"))
