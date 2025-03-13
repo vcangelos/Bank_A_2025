@@ -3,16 +3,16 @@ import java.io.*;//saves csv file
 import java.util.*;//scannner
 
 class CreditCard {
-    private String cardNumber;
-    private String cardType;
-    private String cvv;
-    private String expirationDate;
-    private double balance;
-    private double creditLimit;
-    private double outstandingBalance;
-    private int creditScore;
-    private double monthlySpending;
-    private static final double TRANSFER_FEE = 5.0;//constnt 5 dollar fee for transfers
+    public String cardNumber;
+    public String cardType;
+    public String cvv;
+    public String expirationDate;
+    public double balance;
+    public double creditLimit;
+    public double outstandingBalance;
+    public int creditScore;
+    public double monthlySpending;
+    public static final double TRANSFER_FEE = 5.0;//constnt 5 dollar fee for transfers
 
     public CreditCard(String cardNumber, String cardType, String cvv, String expirationDate, double creditLimit) {
         this.cardNumber = cardNumber;
@@ -90,7 +90,7 @@ class CreditCard {
     }
 }
 
-public class BankSystem {
+class BankSystem {
     public static void main(String[] args) {
         List<CreditCard> cards = new ArrayList<>();
         Scanner scanner = new Scanner(System.in);
