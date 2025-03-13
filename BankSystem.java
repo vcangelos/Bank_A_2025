@@ -23,12 +23,12 @@ class ExtendedCard extends Card {
         super(cardNumber);
     }
 
-    // CVC generator
+// CVC generator
     String generateCVC() {
         return String.format("%03d", random.nextInt(1000));
     }
 
-    // Expiration generator 2025-2030
+// Expiration generator 2025-2030
     String generateExpirationDate() {
         int month = random.nextInt(12) + 1;
         int year = random.nextInt(6) + 25;
@@ -40,12 +40,12 @@ class BankSecurity {
     private static final Random random = new Random();
     private static String storedHashedPin;
 
-    // 4-digit card pin generator
+// 4-digit card pin generator
     public static String generateCardPin() {
         return String.valueOf(1000 + random.nextInt(9000));
     }
 
-    // Hashes PIN
+// Hashes PIN
     public static String hashPin(String pin) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -60,12 +60,12 @@ class BankSecurity {
         }
     }
 
-    // Stores hashed pin
+// Stores hashed pin
     public static void setAccountPin(String pin) {
         storedHashedPin = hashPin(pin);
     }
 
-    // Validates pin
+// Validates pin
     public static boolean validatePin(String enteredPin) {
         return hashPin(enteredPin).equals(storedHashedPin);
     }
@@ -76,13 +76,13 @@ public class BankSystem {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        // Ask for cardholder's first and last name
+// Ask for cardholder's first and last name
         System.out.print("Enter the cardholder's first name: ");
         String firstName = scanner.nextLine();
         System.out.print("Enter the cardholder's last name: ");
         String lastName = scanner.nextLine();
 
-        // Generate card
+// Generate card
         ExtendedCard card = new ExtendedCard(generateVisaCardNumber());
         System.out.println("\nCardholder Name: " + firstName + " " + lastName);
         System.out.println("Card Type: " + card.getCardType());
@@ -90,17 +90,17 @@ public class BankSystem {
         System.out.println("CVC: " + card.generateCVC());
         System.out.println("Expiration Date: " + card.generateExpirationDate());
 
-        // Generate PIN
+// Generate PIN
         String cardPin = BankSecurity.generateCardPin();
         System.out.println("Generated Card PIN: " + cardPin);
 
-        // "Set PIN"
+// "Set PIN"
         System.out.print("Set your Account PIN (4-digit): ");
         String accountPin = scanner.nextLine();
         BankSecurity.setAccountPin(accountPin);
         System.out.println("Account PIN set successfully.");
 
-        // Verify PIN
+// Verify PIN
         System.out.print("Enter your Account PIN to verify: ");
         String enteredPin = scanner.nextLine();
         if (BankSecurity.validatePin(enteredPin)) {
@@ -112,7 +112,7 @@ public class BankSystem {
         scanner.close();
     }
 
-    // Generates Visa card number
+// Generates Visa card number
     private static String generateVisaCardNumber() {
         Random random = new Random();
         StringBuilder cardNumber = new StringBuilder("4");
