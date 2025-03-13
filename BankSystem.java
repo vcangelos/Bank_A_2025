@@ -10,7 +10,7 @@ class Card {
         this.cardNumber = cardNumber;
     }
 
-    // Credit card network #
+// Credit card network #
     String getCardType() {
         return "Visa";
     }
