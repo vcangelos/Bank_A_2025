@@ -1,142 +1,150 @@
 package moneytransfer;
 
+import java.text.DecimalFormat;
 import java.util.Scanner;
 
-public class moneytransfer 
-{
-    public static void main(String[] args)
-    {
+public class moneytransfer {
+    public static void main(String[] args) {
         boolean accselected = false;
-        String checkorsave;
+        String checkorsave = "";
         Scanner scan = new Scanner(System.in);
-        double exchangeValue;
+        DecimalFormat df = new DecimalFormat("0.00"); // Format for currency
 
         System.out.print("What account would you like to transfer from, checking [1] or savings [2]? ");
-        while (accselected == false)
-        {
-            String transAcc = scan.nextLine();
-            if (transAcc.equalsIgnoreCase("1") || transAcc.equalsIgnoreCase("2"))
-            {
+        while (!accselected) {
+            String transAcc = scan.nextLine().trim();
+            if (transAcc.equals("1")) {
+                System.out.println("You selected checking.");
+                checkorsave = "checking";
                 accselected = true;
-
-                if (transAcc.equalsIgnoreCase("1"))
-                {
-                    // pull from checking
-                    System.out.println("You selected checking.");
-                    checkorsave = "checking";
-                    
-                }
-
-                if (transAcc.equalsIgnoreCase("2"))
-                {
-                    // pull from savings
-                    System.out.println("You selected savings.");
-                    checkorsave = "savings";
-                }
-            }
-            else 
-            {
-                System.out.println("Invalid input. Please type the number that corresponds to the correct account.");
+            } else if (transAcc.equals("2")) {
+                System.out.println("You selected savings.");
+                checkorsave = "savings";
+                accselected = true;
+            } else {
+                System.out.println("Invalid input. Please type 1 for checking or 2 for savings.");
             }
         }
 
         String accNum;
         boolean validAcc = false;
-        while (!validAcc) 
-        {
+        while (!validAcc) {
             System.out.println("Please enter your 12-digit account number:");
             System.out.print("#");
-            accNum = scan.nextLine();
+            accNum = scan.nextLine().trim();
 
-            if (accNum.matches("\\d{12}")) 
-            {
+            if (accNum.matches("\\d{12}")) {
                 System.out.println("Account number is valid.");
                 validAcc = true;
-            } 
-            else 
-            {
+            } else {
                 System.out.println("Invalid account number. Please enter a valid 12-digit account number.");
             }
         }
 
         String routingNumber;
         boolean validRoute = false;
-        while (!validRoute) 
-        {
+        while (!validRoute) {
             System.out.println("Please enter your 9-digit routing number:");
             System.out.print("#");
-            routingNumber = scan.nextLine();
+            routingNumber = scan.nextLine().trim();
 
-            if (routingNumber.matches("\\d{9}")) 
-            {
+            if (routingNumber.matches("\\d{9}")) {
                 System.out.println("Routing number is valid.");
                 validRoute = true;
-            } 
-            else 
-            {
+            } else {
                 System.out.println("Invalid routing number. Please enter a valid 9-digit routing number.");
             }
         }
 
         System.out.println("Please enter your billing address:");
 
-        // Street address
         System.out.print("Street Address: ");
-        String streetAddress = scan.nextLine();
+        String streetAddress = scan.nextLine().trim();
 
-        // City
         System.out.print("City: ");
-        String city = scan.nextLine();
+        String city = scan.nextLine().trim();
 
-        // State
         System.out.print("State: ");
-        String state = scan.nextLine();
+        String state = scan.nextLine().trim();
 
-        // Zip code
         String zipCode = "";
         boolean validZip = false;
-        while (!validZip) 
-        {
+		while (!validZip ) {
             System.out.print("Zip Code: ");
-            zipCode = scan.nextLine();
+            zipCode = scan.nextLine().trim();
 
-            // Ensure zip code is numeric (only digits allowed)
-            if (zipCode.matches("\\d+")) 
-            {
+            if (zipCode.matches("\\d{5}")) {
                 System.out.println("Zip Code is valid.");
                 validZip = true;
-            } 
-            else 
-            {
-                System.out.println("Invalid Zip Code. Please enter a valid numeric zip code.");
+            } else {
+                System.out.println("Invalid Zip Code. Please enter a valid 5-digit zip code.");
             }
         }
 
-        // Country
-        System.out.print("Country/Continent (Choose from USA, EU, China, UK): ");
-        String country = scan.nextLine();
-        if (country == "USA")
-        {
-        	//Connect to FX
+		String country = "";
+        boolean validCountry = false;
+        double transferFee = 0.00;
+        while (!validCountry) {
+            System.out.print("Country/Continent (Choose from USA, EU, China, UK): ");
+            country = scan.nextLine().trim().toUpperCase();
+
+            switch (country) {
+                case "USA":
+                    transferFee = 0.02;
+                    validCountry = true;
+                    break;
+                case "EU":
+                    transferFee = 0.05;
+                    validCountry = true;
+                    break;
+                case "CHINA":
+                    transferFee = 0.07;
+                    validCountry = true;
+                    break;
+                case "UK":
+                    transferFee = 0.05;
+                    validCountry = true;
+                    break;
+                default:
+                    System.out.println("Invalid country. Please enter USA, EU, China, or UK.");
+            }
         }
-        if (country == "EU")
-        {
-        	
-        }
-        if (country == "China")
-        {
-        	
-        }
-        if (country == "UK")
-        {
-        	
-        }
-        // Display the collected billing address
+
         System.out.println("\nBilling Address:");
         System.out.println("Street Address: " + streetAddress);
         System.out.println("City/Province: " + city);
         System.out.println("State/Region: " + state);
         System.out.println("Zip Code/Postal Code: " + zipCode);
         System.out.println("Country: " + country);
+
+        double amount = 0.0;
+        boolean validAmount = false;
+        while (!validAmount) {
+            System.out.print("Enter the amount to transfer: ");
+            if (scan.hasNextDouble()) {
+                amount = scan.nextDouble();
+                if (amount > 0) {
+                    validAmount = true;
+                } else {
+                    System.out.println("Transfer amount must be greater than zero.");
+                }
+            } else {
+                System.out.println("Invalid amount. Please enter a valid number with a decimal.");
+                scan.next(); // Consume invalid input
+            }
+        }
+
+        scan.nextLine(); // Consume newline
+
+        // Calculate total amount deducted
+        double totalAmount = amount + (amount * transferFee);
+
+        // Transfer Summary
+        System.out.println("\nTransfer Summary:");
+        System.out.println("Transfer Amount: $" + df.format(amount));
+        System.out.println("Transfer Fee: " + (transferFee * 100) + "%");
+        System.out.println("Total Amount Deducted: $" + df.format(totalAmount));
+
+        scan.close();
     }
 }
