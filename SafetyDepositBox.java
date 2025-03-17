@@ -10,7 +10,7 @@ public class SafetyDepositBox {
     private static final Map<String, BoxDetails> BOX_SIZES = new HashMap<>();
     
     // Hardcoded file path to save data to CSV
-    private static final String CSV_FILE_PATH = "C:/Users/mshah332/Downloads/testBank.csv";  // Change this to your desired path
+    private static final String CSV_FILE_PATH = "src//BankDepositBox.csv";  // Change this to your desired path
     
     static {
         // Initializing box sizes with dimensions and cost
@@ -23,9 +23,11 @@ public class SafetyDepositBox {
         Scanner scanner = new Scanner(System.in);
 
         // Hardcoded user credentials (parameters)
-        String validUsername = "manav";
-        String validDob = "2008-12-18";
-        String validSsn = "123-45-6789";
+        //connect by adding values
+        //by checking these values and searching from the data from existing users that will find the users deposit box CONNECT**
+        String validUser = "Manav";
+        String validDob = "181208";
+        String validSsn = "123456789";
         String validPassword = "123";
 
         while (true) {
@@ -37,7 +39,7 @@ public class SafetyDepositBox {
             scanner.nextLine();  // Consume newline
 
             if (choice == 1) {
-                String username = login(scanner, validUsername, validDob, validSsn, validPassword);
+                String username = login(scanner, validUser, validDob, validSsn, validPassword);
                 if (username != null) {
                     userMenu(scanner, username);
                 }
@@ -52,7 +54,7 @@ public class SafetyDepositBox {
     }
 
     // Login method to authenticate user based on parameters
-    private static String login(Scanner scanner, String validUsername, String validDob, String validSsn, String validPassword) {
+    private static String login(Scanner scanner, String validUser, String validDob, String validSsn, String validPassword) {
         System.out.println("=== Login ===");
         System.out.print("Enter your username: ");
         String username = scanner.nextLine();
@@ -64,7 +66,7 @@ public class SafetyDepositBox {
         String password = scanner.nextLine();
 
         // Authenticate the user by comparing the input with hardcoded parameters
-        if (username.equals(validUsername) && dob.equals(validDob) && ssn.equals(validSsn) && password.equals(validPassword)) {
+        if (username.equals(validUser) && dob.equals(validDob) && ssn.equals(validSsn) && password.equals(validPassword)) {
             System.out.println("Login successful!");
             return username;
         }
