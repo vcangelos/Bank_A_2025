@@ -86,7 +86,8 @@ public class BankProject {
             writer.write("\"Card Type\",\"Card Number\",\"Expiration Date\",\"Credit Limit\",\"Outstanding Balance\",\"Credit Score\"\n");
             writer.write("\"" + myCard.getCardType() + "\",\"" + myCard.maskCardNumber() + "\",\"" + myCard.getExpirationDate() + "\",\"" + myCard.getCreditLimit() + "\",\"" + myCard.getOutstandingBalance() + "\",\"" + myCard.getCreditScore() + "\"\n");
             System.out.println("CSV file created successfully.");
-        } catch (IOException e) {
+        } 
+            catch (IOException e) {
             e.printStackTrace();
         }
     }
