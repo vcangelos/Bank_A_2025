@@ -1,8 +1,10 @@
+
 import java.util.*;
 import java.io.*;
 
 class CDWelcomeScreen {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws FileNotFoundException {
+
         Scanner userinput = new Scanner(System.in);
 
         // Asking for user's name and welcoming
@@ -78,26 +80,39 @@ class CDWelcomeScreen {
         } else {
             System.out.println("Invalid input. Please respond with 'yes' or 'no'.");
         }
+        addUsers(name,name,name,2,9999,2);
+
     }
 
-    public static void addUser(String username, String dateOfBirth, int ID) {
-        try {
-            File file = new File("src/CD.csv");
-            boolean isNewFile = !file.exists();
-            PrintWriter out = new PrintWriter(new FileWriter(file, true));
+    public static void addUsers(String username, String password, String DOB, int UniqueID, double termLength, double amount ) throws FileNotFoundException {
+        // Scanner to read existing CSV
+        Scanner csvreader = new Scanner(new File("src/CD.csv"));
+        File tempFile = new File("src/temp.csv"); // I originally had this as a file manually added in the beginning but I realized it would be better to create this in the method and delete the UserData that we had before
+        // PrintWriter to write to temp.csv
+        PrintWriter out = new PrintWriter(new File("src/temp.csv"));
 
-            if (isNewFile) {
-                out.println("Username,DateOfBirth,ID");
+        // Copy existing data from UserData.csv to temp.csv
+        while (csvreader.hasNextLine()) {
+            String line = csvreader.nextLine().trim();
+            String[] UserDatacopier = line.split(",");
+
+            for (int i = 0; i < UserDatacopier.length; i++) {
+                UserDatacopier[i] = UserDatacopier[i].trim();
             }
-            
-            out.println(username + "," + dateOfBirth + "," + ID);
-            out.close();
-            
-            System.out.println("User added successfully to CD.csv");
-        } catch (IOException e) {
-            System.out.println("An error occurred while writing to the file.");
-            e.printStackTrace();
+
+            // Write the formatted data back to temp.csv
+            out.println(String.join(",", UserDatacopier));
         }
+
+        // From video referenced in the beginning
+        out.println(String.join(",", username, password, DOB,  Integer.toString(UniqueID),  Double.toString(termLength), Double.toString(amount)));
+
+        // Close resources since they wont be used unless the method is called
+        csvreader.close();
+        out.close();
+        File userDataFile = new File("src/CD.csv");
+        userDataFile.delete();
+        tempFile.renameTo(new File("src/CD.csv"));
     }
 }
 
