@@ -35,7 +35,7 @@ class ExtendedCard extends Card {
         return String.format("%03d", random.nextInt(1000));
     }
 
-    // Expiration generator 2025-2030
+// Expiration generator 2025-2030
     String generateExpirationDate() {
         int month = random.nextInt(12) + 1;
         int year = random.nextInt(6) + 25;
@@ -47,7 +47,7 @@ class BankSecurity {
     private static final Random random = new Random();
     private static String storedHashedPin;
 
-    // 4-digit card pin generator
+// 4-digit card pin generator
     public static String generateCardPin() {
         return String.valueOf(1000 + random.nextInt(9000));
     }
@@ -72,7 +72,7 @@ class BankSecurity {
         storedHashedPin = hashPin(pin);
     }
 
-    // Validates pin
+// Validates pin
     public static boolean validatePin(String enteredPin) {
         return hashPin(enteredPin).equals(storedHashedPin);
     }
@@ -83,7 +83,10 @@ public class BankSystem {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        // Ask for cardholder's first and last name
+// Prompt for user information to make a new debit card
+        System.out.println("Please provide the following information to create a new debit card:");
+
+// Ask for cardholder's first and last name
         System.out.print("Enter the cardholder's first name: ");
         String firstName = scanner.nextLine();
         System.out.print("Enter the cardholder's last name: ");
