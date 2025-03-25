@@ -1,32 +1,27 @@
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Date;
 
 public class SafetyDepositBox {
 
-    // In-memory storage for boxes, indexed by user ID and box size
     private static Map<String, BoxDetails> boxes = new HashMap<>();
-    
-    // Box sizes and costs, hardcoded for simplicity
     private static final Map<String, BoxDetails> BOX_SIZES = new HashMap<>();
-    
-    // Hardcoded file path to save data to CSV
-    private static final String CSV_FILE_PATH = "src//BankDepositBox.csv";  // Change this to your desired path
-    
+    private static final String CSV_FILE_PATH = "src//BankDepositBox.csv";
+
     static {
-        // Initializing box sizes with dimensions and cost
         BOX_SIZES.put("Small", new BoxDetails("Small", "5\" x 5\" x 21.5\"", 50.0));
         BOX_SIZES.put("Medium", new BoxDetails("Medium", "3\" x 10\" x 21.5\"", 60.0));
         BOX_SIZES.put("Large", new BoxDetails("Large", "5\" x 10\" x 21.5\"", 80.0));
+
+        loadBoxesFromCSV();
     }
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        // Hardcoded user credentials (parameters)
-        //connect by adding values
-        //by checking these values and searching from the data from existing users that will find the users deposit box CONNECT**
         String validUser = "Manav";
-        String validDob = "181208";
+        String validDob = "12182008";
         String validSsn = "123456789";
         String validPassword = "123";
 
@@ -36,7 +31,7 @@ public class SafetyDepositBox {
             System.out.println("2. Exit");
             System.out.print("Choose an option: ");
             int choice = scanner.nextInt();
-            scanner.nextLine();  // Consume newline
+            scanner.nextLine();
 
             if (choice == 1) {
                 String username = login(scanner, validUser, validDob, validSsn, validPassword);
@@ -53,19 +48,20 @@ public class SafetyDepositBox {
         scanner.close();
     }
 
-    // Login method to authenticate user based on parameters
     private static String login(Scanner scanner, String validUser, String validDob, String validSsn, String validPassword) {
         System.out.println("=== Login ===");
         System.out.print("Enter your username: ");
         String username = scanner.nextLine();
-        System.out.print("Enter your date of birth (YYYY-MM-DD): ");
+
+        System.out.print("Enter your date of birth (MMDDYYYY): ");
         String dob = scanner.nextLine();
+
         System.out.print("Enter your Social Security Number (SSN): ");
         String ssn = scanner.nextLine();
+
         System.out.print("Enter your password: ");
         String password = scanner.nextLine();
 
-        // Authenticate the user by comparing the input with hardcoded parameters
         if (username.equals(validUser) && dob.equals(validDob) && ssn.equals(validSsn) && password.equals(validPassword)) {
             System.out.println("Login successful!");
             return username;
@@ -75,17 +71,21 @@ public class SafetyDepositBox {
         return null;
     }
 
-    // Show user menu after successful login
     private static void userMenu(Scanner scanner, String username) {
+        System.out.println("\n=== User Menu ===");
+        if (hasExistingBox(username)) {
+            System.out.println("You already have a deposit box:");
+            viewBoxDetails(username);
+        }
+
         while (true) {
-            System.out.println("\n=== User Menu ===");
-            System.out.println("1. Create Box");
+            System.out.println("\n1. Create Box");
             System.out.println("2. Modify Box Contents");
-            System.out.println("3. View Box Details and Interactions");
+            System.out.println("3. View Box Details");
             System.out.println("4. Logout");
             System.out.print("Choose an option: ");
             int choice = scanner.nextInt();
-            scanner.nextLine();  // Consume newline
+            scanner.nextLine();
 
             if (choice == 1) {
                 createBox(scanner, username);
@@ -102,8 +102,21 @@ public class SafetyDepositBox {
         }
     }
 
-    // Create a box for the user
+    private static boolean hasExistingBox(String username) {
+        for (String boxId : boxes.keySet()) {
+            if (boxId.startsWith(username)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static void createBox(Scanner scanner, String username) {
+        if (hasExistingBox(username)) {
+            System.out.println("You already have a box. You cannot create another.");
+            return;
+        }
+
         System.out.println("=== Choose Box Size ===");
         for (String size : BOX_SIZES.keySet()) {
             BoxDetails boxDetails = BOX_SIZES.get(size);
@@ -111,59 +124,60 @@ public class SafetyDepositBox {
         }
         System.out.print("Choose a box size (Small/Medium/Large): ");
         String boxSize = scanner.nextLine();
-        BoxDetails selectedBox = BOX_SIZES.get(boxSize);
+        boxSize = boxSize.substring(0, 1).toUpperCase() + boxSize.substring(1).toLowerCase();
 
+        BoxDetails selectedBox = BOX_SIZES.get(boxSize);
         if (selectedBox == null) {
             System.out.println("Invalid box size. Try again.");
             return;
         }
 
-        // Create a new deposit box for the user and store it in the boxes map
         BoxDetails box = new BoxDetails(boxSize, selectedBox.getDimensions(), selectedBox.getCost());
-        String boxKey = username + "_" + boxSize; // Key formed using username and box size
+        String boxKey = username + "_" + boxSize;
         boxes.put(boxKey, box);
         System.out.println("Box created: " + boxSize + " with a cost of $" + selectedBox.getCost());
 
-        // Save the box details to CSV
-        saveBoxDetailsToCSV(username, boxSize, selectedBox.getDimensions(), selectedBox.getCost(), "", 0.0);
+        String action = "Created";
+        logAction(username, action + " Box: " + boxSize);
+        saveBoxDetailsToCSV(action);
     }
 
-    // Modify contents of the deposit box
     private static void modifyBoxContents(Scanner scanner, String username) {
         System.out.print("Enter your box size (e.g., Small, Medium, Large): ");
         String boxSize = scanner.nextLine();
-        String boxKey = username + "_" + boxSize; // Generate the key for the box
+        boxSize = boxSize.substring(0, 1).toUpperCase() + boxSize.substring(1).toLowerCase();
+
+        String boxKey = username + "_" + boxSize;
         BoxDetails box = boxes.get(boxKey);
 
         if (box != null) {
             System.out.print("Enter the new contents of your box: ");
             String newContents = scanner.nextLine();
+
             System.out.print("Enter the total value of items in the box: ");
             double newValue = scanner.nextDouble();
-            scanner.nextLine();  // Consume newline
+            scanner.nextLine();
 
-            // Update box details
             box.setContents(newContents);
             box.setTotalValue(newValue);
             System.out.println("Box contents updated.");
 
-            // Save the updated box details to CSV
-            saveBoxDetailsToCSV(username, boxSize, box.getDimensions(), box.getCost(), box.getContents(), box.getTotalValue());
+            String action = "Modified Contents";
+            logAction(username, action + " of Box: " + boxSize);
+            saveBoxDetailsToCSV(action);
         } else {
             System.out.println("Box not found.");
         }
     }
 
-    // View box details and interactions
     private static void viewBoxDetails(String username) {
         System.out.println("=== Box Details ===");
         for (String boxId : boxes.keySet()) {
-            BoxDetails box = boxes.get(boxId);
             if (boxId.startsWith(username)) {
-                System.out.println("Box ID: " + boxId);
+                BoxDetails box = boxes.get(boxId);
                 System.out.println("Size: " + box.getSize());
-                System.out.println("Box Dimensions: " + box.getDimensions());
-                System.out.println("Box Cost: $" + box.getCost());
+                System.out.println("Dimensions: " + box.getDimensions());
+                System.out.println("Cost: $" + box.getCost());
                 System.out.println("Contents: " + box.getContents());
                 System.out.println("Total Value: $" + box.getTotalValue());
                 System.out.println("-------------------------");
@@ -171,58 +185,79 @@ public class SafetyDepositBox {
         }
     }
 
-    // Save box details to a CSV file
-    private static void saveBoxDetailsToCSV(String username, String boxSize, String dimensions, double cost, String contents, double totalValue) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(CSV_FILE_PATH, true))) {
-            writer.write(username + "," + boxSize + "," + dimensions + "," + cost + "," + contents + "," + totalValue);
-            writer.newLine();
+    private static void saveBoxDetailsToCSV(String action) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String currentDate = dateFormat.format(new Date());
+
+        try (FileWriter fileWriter = new FileWriter(CSV_FILE_PATH, true);
+             BufferedWriter writer = new BufferedWriter(fileWriter)) {
+            for (String key : boxes.keySet()) {
+                BoxDetails box = boxes.get(key);
+                String username = key.substring(0, key.lastIndexOf("_"));
+                writer.write(key + "," + box.getSize() + "," + box.getDimensions() + "," + box.getCost() + "," +
+                        box.getContents() + "," + box.getTotalValue() + "," + action + "," + currentDate);
+                writer.newLine();
+            }
         } catch (IOException e) {
-            System.out.println("Error saving box details to CSV: " + e.getMessage());
+            System.out.println("Error saving box details: " + e.getMessage());
         }
     }
 
-    // BoxDetails class to store box information
+    private static void loadBoxesFromCSV() {
+        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
+            String line = reader.readLine(); // Read and discard the header line
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length >= 6) {
+                    String boxKey = parts[0];
+                    String size = parts[1];
+                    String dimensions = parts[2];
+                    try {
+                        double cost = Double.parseDouble(parts[3]);
+                        String contents = parts[4];
+                        double totalValue = Double.parseDouble(parts[5]);
+                        BoxDetails box = new BoxDetails(size, dimensions, cost, contents, totalValue);
+                        boxes.put(boxKey, box);
+                    } catch (NumberFormatException e) {
+                        System.out.println("Skipping invalid data line: " + line + " - Could not parse cost or value.");
+                    }
+                } else if (!line.trim().isEmpty()) {
+                    System.out.println("Skipping invalid data line: " + line + " - Incorrect number of fields.");
+                }
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("No previous data file found.");
+        } catch (IOException e) {
+            System.out.println("Error reading data file: " + e.getMessage());
+        }
+    }
+
+    private static void logAction(String username, String action) {
+        System.out.println("Log: " + username + " - " + action);
+    }
+
     static class BoxDetails {
-        private String size;
-        private String dimensions;
-        private double cost;
-        private String contents;
-        private double totalValue;
+        private String size, dimensions, contents = "";
+        private double cost, totalValue = 0.0;
 
         public BoxDetails(String size, String dimensions, double cost) {
+            this(size, dimensions, cost, "", 0.0);
+        }
+
+        public BoxDetails(String size, String dimensions, double cost, String contents, double totalValue) {
             this.size = size;
             this.dimensions = dimensions;
             this.cost = cost;
-            this.contents = "";
-            this.totalValue = 0.0;
-        }
-
-        public String getSize() {
-            return size;
-        }
-
-        public String getDimensions() {
-            return dimensions;
-        }
-
-        public double getCost() {
-            return cost;
-        }
-
-        public String getContents() {
-            return contents;
-        }
-
-        public void setContents(String contents) {
             this.contents = contents;
-        }
-
-        public double getTotalValue() {
-            return totalValue;
-        }
-
-        public void setTotalValue(double totalValue) {
             this.totalValue = totalValue;
         }
+
+        public String getSize() { return size; }
+        public String getDimensions() { return dimensions; }
+        public double getCost() { return cost; }
+        public String getContents() { return contents; }
+        public double getTotalValue() { return totalValue; }
+        public void setContents(String contents) { this.contents = contents; }
+        public void setTotalValue(double totalValue) { this.totalValue = totalValue; }
     }
 }
