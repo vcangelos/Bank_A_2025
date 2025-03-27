@@ -1,7 +1,6 @@
 package checkingaccount;
 
-import java.util.Scanner;
-import java.util.Date;
+import java.util.*;
 import java.io.*;
 
 class CheckingAccount {
@@ -9,23 +8,59 @@ class CheckingAccount {
     private double balance;
     private String accountHolderName;
     
-    private boolean isOverdraftProtectionEnabled;
+    private boolean isOverdraftProtectionEnabled = false;
     private double overdraftLimit;
     private Date dateOpened;
     private Date lastTransactionDate;
     
-    public CheckingAccount(String accountNumber, String accountHolderName, double balance) {
-        this.accountNumber = accountNumber;
+    private static final String CSV_FILE = "checkingaccount.csv"; // Ensures consistency
+
+    // Constructor: Generate a unique account number
+    public CheckingAccount(String accountHolderName, double balance) {
         this.accountHolderName = accountHolderName;
         this.balance = balance;
+        this.accountNumber = generateUniqueAccountNumber(); // Generate unique account number
         this.dateOpened = new Date();
         this.lastTransactionDate = new Date();
     }
-    
+
+    // Generate a unique 12-digit account number
+    private String generateUniqueAccountNumber() {
+        Random rand = new Random();
+        Set<String> existingAccountNumbers = getExistingAccountNumbers(); // Read existing account numbers
+
+        String newAccountNumber;
+        do {
+            newAccountNumber = String.format("%012d", rand.nextLong(999999999999L)); // Generate 12-digit number
+        } while (existingAccountNumbers.contains(newAccountNumber)); // Ensure uniqueness
+
+        return newAccountNumber;
+    }
+
+    // Read existing account numbers from CSV
+    private Set<String> getExistingAccountNumbers() {
+        Set<String> accountNumbers = new HashSet<>();
+        File file = new File(CSV_FILE);
+
+        if (file.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split(",");
+                    if (parts.length > 1) {
+                        accountNumbers.add(parts[1].trim()); // Account number is in the second column
+                    }
+                }
+            } catch (IOException e) {
+                System.err.println("Error reading CSV file: " + e.getMessage());
+            }
+        }
+        return accountNumbers;
+    }
+
     public void deposit(double amount) {
         if (amount > 0) {
-            amount = Math.round(amount * 100.0) / 100.0;
-            balance += amount;
+            balance = Math.round((balance + amount) * 100.0) / 100.0;
             lastTransactionDate = new Date();
             logTransaction("Deposit", amount);
         } else {
@@ -39,58 +74,35 @@ class CheckingAccount {
             lastTransactionDate = new Date();
             logTransaction("Withdrawal", amount);
             return true;
-        } else if (amount <= 0) {
-            System.out.println("Invalid withdrawal amount. Please enter a positive number.");
-            return false;
         } else {
-            System.out.println("Insufficient funds. Your account has $" + balance + ".");
+            System.out.println(amount <= 0 ? "Invalid withdrawal amount." : "Insufficient funds. Your balance: $" + balance);
             return false;
         }
     }
 
-    public double getBalance() {
-        return balance;
-    }
-
+    public double getBalance() { return balance; }
+    
     private void logTransaction(String type, double amount) {
         System.out.println(type + " of $" + amount + " completed!");
     }
 
-    public String getAccountNumber() {
-        return accountNumber;
-    }
+    public String getAccountNumber() { return accountNumber; }
+    public String getAccountHolderName() { return accountHolderName; }
+    public Date getDateOpened() { return dateOpened; }
+    public Date getLastTransactionDate() { return lastTransactionDate; }
+    public boolean getIsOverdraftProtectionEnabled() { return isOverdraftProtectionEnabled; }
+    public double getOverdraftLimit() { return overdraftLimit; }
 
-    public String getAccountHolderName() {
-        return accountHolderName;
-    }
-
-    public boolean isOverdraftProtectionEnabled() {
-        return isOverdraftProtectionEnabled;
-    }
-
-    public double getOverdraftLimit() {
-        return overdraftLimit;
-    }
-
-    public Date getDateOpened() {
-        return dateOpened;
-    }
-
-    public Date getLastTransactionDate() {
-        return lastTransactionDate;
-    }
-    
-    private static void appendToCSV() {
-            String filePath = "data.csv";
-            String dataToAppend = "John Doe,30,john.doe@example.com";
-
-            try (FileWriter writer = new FileWriter(filePath, true)) {
-                writer.append(dataToAppend);
-                writer.append("\n"); 
-                System.out.println("Data appended to CSV file successfully.");
-            } catch (IOException e) {
-                System.err.println("Error appending data to CSV file: " + e.getMessage());
-		}
+    // Append account details to CSV
+    public void appendToCSV() {
+        try (FileWriter writer = new FileWriter(CSV_FILE, true)) {
+            writer.append(accountHolderName).append(",");
+            writer.append(accountNumber).append(",");
+            writer.append(String.valueOf(balance)).append("\n");
+            System.out.println("Account details saved to CSV.");
+        } catch (IOException e) {
+            System.err.println("Error writing to CSV: " + e.getMessage());
+        }
     }
 }
 
@@ -100,7 +112,7 @@ public class CheckingAccountTest {
         boolean breakloop = false;
         double amount;
         
-        CheckingAccount checking = new CheckingAccount("12345", "John Doe", 1000.0);
+        CheckingAccount checking = new CheckingAccount(accountNumber, accountHolderName, balance);
 
         while (!breakloop) {
             System.out.print("What would you like to do? Check Balance[1], Make a Deposit[2], Make a Withdrawal[3], Get Other Info[4], Quit Checking Account Management[5]: ");
