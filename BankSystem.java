@@ -83,7 +83,7 @@ public class BankSystem {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-// user options
+// Show the user options
         System.out.println("Choose an option:");
         System.out.println("1. Access existing card info");
         System.out.println("2. Create a new card");
@@ -156,9 +156,8 @@ public class BankSystem {
 // Writes card information to CSV
     private static void writeCardInfoToCSV(String firstName, String lastName, String cardType, String cardNumber, String cvc, String expirationDate, String cardPin, String accountPin) {
         try (PrintWriter writer = new PrintWriter(new FileWriter("card_info.csv", true))) {
-            // Store the hashed PIN, not the plain PIN
-            String hashedAccountPin = BankSecurity.hashPin(accountPin);
-            writer.println(firstName + "," + lastName + "," + cardType + "," + cardNumber + "," + cvc + "," + expirationDate + "," + cardPin + "," + hashedAccountPin);
+            // Write plain account PIN, instead of hashing it
+            writer.println(firstName + "," + lastName + "," + cardType + "," + cardNumber + "," + cvc + "," + expirationDate + "," + cardPin + "," + accountPin);
         } catch (IOException e) {
             System.out.println("Error writing to CSV file: " + e.getMessage());
         }
@@ -174,9 +173,9 @@ public class BankSystem {
                 String storedLastName = cardInfo[1];
                 String storedHashedAccountPin = cardInfo[7]; // The hashed account PIN is stored at index 7
 
-// Check if the entered PIN matches the stored hashed PIN
+// Check if the entered PIN matches the stored plain PIN
                 if (storedFirstName.equalsIgnoreCase(firstName) && storedLastName.equalsIgnoreCase(lastName)
-                    && BankSecurity.hashPin(enteredPin).equals(storedHashedAccountPin)) {
+                    && enteredPin.equals(storedHashedAccountPin)) {
 
 // Print card info
                     System.out.println("Cardholder: " + storedFirstName + " " + storedLastName);
