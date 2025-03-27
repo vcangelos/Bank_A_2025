@@ -80,11 +80,11 @@ class CDWelcomeScreen {
         } else {
             System.out.println("Invalid input. Please respond with 'yes' or 'no'.");
         }
-        addUsers(name,name,name,2,9999,2);
+        addUserstoCD(name,name,name,2,9999,2);
 
     }
 
-    public static void addUsers(String username, String password, String DOB, int UniqueID, double termLength, double amount ) throws FileNotFoundException {
+    public static void addUserstoCD(String username, String password, String DOB, int UniqueID, double termLength, double amount ) throws FileNotFoundException {
         // Scanner to read existing CSV
         Scanner csvreader = new Scanner(new File("src/CD.csv"));
         File tempFile = new File("src/temp.csv"); // I originally had this as a file manually added in the beginning but I realized it would be better to create this in the method and delete the UserData that we had before
@@ -184,4 +184,6 @@ class CDinterface {
     public static CD getCD(int selection) {
         return CDoptions.get((selection - 1));
     }
+
 }
+
