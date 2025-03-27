@@ -1,48 +1,55 @@
-import java.util.*;
 
-public class CDWelcomeScreen {
-    public static void main(String[] args) {
+import java.util.*;
+import java.io.*;
+
+class CDWelcomeScreen {
+    public static void main(String[] args) throws FileNotFoundException {
+
         Scanner userinput = new Scanner(System.in);
-        
+
         // Asking for user's name and welcoming
         System.out.println("Enter User Name:");
         String name = userinput.nextLine();
         System.out.println("Welcome New User " + name);
-        
+
         // Ask if the user wants to create a certificate of deposit
         System.out.println("Would you like to create a certificate of deposit at this time? (yes/no)");
         String response = userinput.nextLine();
-        
+
         // Handle user input for creating a CD
         if (response.equalsIgnoreCase("yes")) {
             System.out.println("Great! Let's get started with setting up your certificate of deposit.");
-            
+
             // Create CDinterface instance to manage CDs
             CDinterface CDI = new CDinterface();
-            
+
             // Add predefined CDs to the list
             CDI.addCD(new CD(3, 5000.00, 1.45));
             CDI.addCD(new CD(6, 5000.00, 2.00));
             CDI.addCD(new CD(12, 5000.00, 2.75));
-            
+
             // Display the available CD options
             CDI.displayCD();
-            double userAmount=0.00;
+            double userAmount = 0.00;
             // Ask user if they want to purchase one of the displayed CDs
             System.out.println("Do any of these options appeal to you? (y/n)");
             String selectResponse = userinput.nextLine();
             if (selectResponse.equalsIgnoreCase("y")) {
                 System.out.println("Which CD would you like to purchase? (Enter the option number)");
                 int selection = userinput.nextInt();
-                
+                userinput.nextLine(); // Consume newline after nextInt()
+
                 // Handle invalid input for selection
                 if (selection > 0 && selection <= CDI.getCDOptionsSize()) {
                     // Asking the user to input the amount they want to invest
                     System.out.println("Enter the amount you want to invest into this CD (in dollars):");
                     userAmount = userinput.nextDouble();
+                    userinput.nextLine(); // Consume newline after nextDouble()
+
                     if (userAmount > 0) {
                         // Proceeding with the purchase with the user-specified amount
-                        System.out.println("You have selected CD option " + selection + " with an investment of $" + userAmount + ". At maturity, it will be worth $"+((userAmount)*(1+((CDI.getCD(selection).getIR())/100)*((CDI.getCD(selection).getTerm())/12))));
+                        double maturityAmount = CDI.getCD(selection).calculateMaturityAmount(userAmount);
+                        System.out.println("You have selected CD option " + selection + " with an investment of $" + userAmount + ". At maturity, it will be worth $" + maturityAmount);
                         // Proceed with the CD purchase simulation
                         CDI.PurchaseCD(selection, userAmount);
                     } else {
@@ -54,27 +61,58 @@ public class CDWelcomeScreen {
             } else {
                 System.out.println("No CD selected.");
             }
-            
+
             // Ask if the user wants to withdraw early
             System.out.println("Do you want to withdraw your CD early? (yes/no)");
-            String earlyWithdrawResponse = userinput.next();
+            String earlyWithdrawResponse = userinput.nextLine();
             if (earlyWithdrawResponse.equalsIgnoreCase("yes")) {
-                System.out.println("You will forfeit all interest and be charged a late withdrawal fee of $"+ (0.01 * (userAmount))+".");
-                // Simulate early withdrawal fee
+                double penalty = 0.01 * userAmount; // Default penalty rate (1%)
+                System.out.println("You will forfeit all interest and be charged a late withdrawal fee of $" + penalty + ".");
                 System.out.println("Your CD has been withdrawn early, and no interest is earned.");
-            }
-            else if(earlyWithdrawResponse.equalsIgnoreCase("no")){
+            } else if (earlyWithdrawResponse.equalsIgnoreCase("no")) {
                 System.out.println("No problem! Let us know when you're ready (we recommend waiting until it matures).");
+            } else {
+                System.out.println("Invalid answer, interpreting as no.");
             }
-            else{
-                System.out.println("invalid answer, interpreting no.");
-            }
-            
+
         } else if (response.equalsIgnoreCase("no")) {
             System.out.println("No problem! If you change your mind, let us know.");
         } else {
             System.out.println("Invalid input. Please respond with 'yes' or 'no'.");
         }
+        addUsers(name,name,name,2,9999,2);
+
+    }
+
+    public static void addUsers(String username, String password, String DOB, int UniqueID, double termLength, double amount ) throws FileNotFoundException {
+        // Scanner to read existing CSV
+        Scanner csvreader = new Scanner(new File("src/CD.csv"));
+        File tempFile = new File("src/temp.csv"); // I originally had this as a file manually added in the beginning but I realized it would be better to create this in the method and delete the UserData that we had before
+        // PrintWriter to write to temp.csv
+        PrintWriter out = new PrintWriter(new File("src/temp.csv"));
+
+        // Copy existing data from UserData.csv to temp.csv
+        while (csvreader.hasNextLine()) {
+            String line = csvreader.nextLine().trim();
+            String[] UserDatacopier = line.split(",");
+
+            for (int i = 0; i < UserDatacopier.length; i++) {
+                UserDatacopier[i] = UserDatacopier[i].trim();
+            }
+
+            // Write the formatted data back to temp.csv
+            out.println(String.join(",", UserDatacopier));
+        }
+
+        // From video referenced in the beginning
+        out.println(String.join(",", username, password, DOB,  Integer.toString(UniqueID),  Double.toString(termLength), Double.toString(amount)));
+
+        // Close resources since they wont be used unless the method is called
+        csvreader.close();
+        out.close();
+        File userDataFile = new File("src/CD.csv");
+        userDataFile.delete();
+        tempFile.renameTo(new File("src/CD.csv"));
     }
 }
 
@@ -83,18 +121,21 @@ class CD {
     double Principal;
     double IR;
 
-    // Default constructor
-    public CD() {
-        this.term = 0;
-        this.Principal = 0.0;
-        this.IR = 0.0;
-    }
-
     // Constructor with parameters
     public CD(double t, double p, double ir) {
         this.term = t;
         this.Principal = p;
         this.IR = ir;
+    }
+
+    // Method to calculate maturity amount based on principal, interest rate, and term
+    public double calculateMaturityAmount(double principal) {
+        return principal * (1 + ((IR) / 100) * (term / 12));
+    }
+
+    // Display CD information
+    public void displayCD() {
+        System.out.println("Term: " + term + " month(s), Principal: $" + Principal + ", Interest Rate: " + IR + "%");
     }
 
     // Getter methods
@@ -104,11 +145,6 @@ class CD {
 
     public double getIR() {
         return this.IR;
-    }
-
-    // Display CD information
-    public void displayCD() {
-        System.out.println("Term: " + term + " month(s), Principal: $" + Principal + ", Interest Rate: " + IR + "%");
     }
 }
 
@@ -144,18 +180,8 @@ class CDinterface {
         CD selectedCD = CDoptions.get(selection - 1);
         System.out.println("You have purchased a " + selectedCD.getTerm() + "-month CD with $" + userAmount + " at an interest rate of " + selectedCD.getIR() + "%.");
     }
-    public static CD getCD(int selection){
-       CD Selected=CDoptions.get((selection-1));
-        return Selected;
-    }
-    
 
-    // Method to generate random CDs
-    
-
-    // Helper method to round numbers to 2 decimal places
-    private static double round(double value, int places) {
-        double factor = Math.pow(10, places);
-        return Math.round(value * factor) / factor;
+    public static CD getCD(int selection) {
+        return CDoptions.get((selection - 1));
     }
 }
