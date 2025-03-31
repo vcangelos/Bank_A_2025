@@ -12,7 +12,7 @@ class Card {
         this.cardNumber = cardNumber;
     }
 
-    // Credit card network #
+// Credit card network #
     String getCardType() {
         return "Visa";
     }
@@ -25,12 +25,12 @@ class ExtendedCard extends Card {
         super(cardNumber);
     }
 
-    // CVC generator (not used anymore)
+// CVC generator (not used anymore)
     String generateCVC() {
         return String.format("%03d", random.nextInt(1000));
     }
 
-    // Expiration generator 2025-2030
+// Expiration generator 2025-2030
     String generateExpirationDate() {
         int month = random.nextInt(12) + 1;
         int year = random.nextInt(6) + 25;
@@ -42,12 +42,12 @@ class BankSecurity {
     private static final Random random = new Random();
     private static String storedHashedPin;
 
-    // 4-digit card pin generator
+// 4-digit card pin generator
     public static String generateCardPin() {
         return String.valueOf(1000 + random.nextInt(9000));
     }
 
-    // Hashes PIN
+// Hashes PIN
     public static String hashPin(String pin) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -62,12 +62,12 @@ class BankSecurity {
         }
     }
 
-    // Stores hashed pin
+// Stores hashed pin
     public static void setAccountPin(String pin) {
         storedHashedPin = hashPin(pin);
     }
 
-    // Validates pin
+// Validates pin
     public static boolean validatePin(String enteredPin) {
         return hashPin(enteredPin).equals(storedHashedPin);
     }
@@ -87,7 +87,7 @@ public class BankSystem {
             int choice = scanner.nextInt();
             scanner.nextLine();  // Consume the newline
 
-            // Handle user input
+// Handle user input
             switch (choice) {
                 case 1:
                     createNewCard(scanner);
@@ -106,13 +106,13 @@ public class BankSystem {
     }
 
     private static void createNewCard(Scanner scanner) {
-        // Ask for user details
+// Ask for user details
         System.out.print("Enter the cardholder's first name: ");
         String firstName = scanner.nextLine();
         System.out.print("Enter the cardholder's last name: ");
         String lastName = scanner.nextLine();
 
-        // Generate card and expiration date
+// Generate card and expiration date
         ExtendedCard card = new ExtendedCard(generateVisaCardNumber());
         String expDate = card.generateExpirationDate();
 
@@ -123,12 +123,12 @@ public class BankSystem {
         System.out.println("Card Number: " + card.cardNumber);
         System.out.println("Expiration Date: " + expDate);
 
-        // Write to CSV file
+// Write to CSV file
         writeCardInfoToCSV(firstName, lastName, card.getCardType(), card.cardNumber, expDate);
     }
 
     private static void viewExistingCards() {
-        // Read and display card info from CSV file
+// Read and display card info from CSV file
         File file = new File("card_info.csv");
         if (!file.exists()) {
             System.out.println("No existing cards found.");
