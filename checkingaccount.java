@@ -7,148 +7,179 @@ class CheckingAccount {
     private String accountNumber;
     private double balance;
     private String accountHolderName;
-    
-    private boolean isOverdraftProtectionEnabled = false;
-    private double overdraftLimit;
+    private boolean isOverdraftProtectionEnabled;
+    private double overdraftLimit = 200.00; // Fixed overdraft limit
+    private double overdraftFee = 35.00;
+    private SavingsAccount linkedSavingsAccount;
     private Date dateOpened;
     private Date lastTransactionDate;
-    
-    private static final String CSV_FILE = "checkingaccount.csv"; // Ensures consistency
 
-    // Constructor: Generate a unique account number
-    public CheckingAccount(String accountHolderName, double balance) {
+    private static final String CSV_FILE = "checkingaccount.csv";
+
+    public CheckingAccount(String accountHolderName, double balance, boolean isOverdraftProtectionEnabled, SavingsAccount linkedSavingsAccount) {
         this.accountHolderName = accountHolderName;
         this.balance = balance;
-        this.accountNumber = generateUniqueAccountNumber(); // Generate unique account number
+        this.accountNumber = generateUniqueAccountNumber();
+        this.isOverdraftProtectionEnabled = isOverdraftProtectionEnabled;
+        this.linkedSavingsAccount = linkedSavingsAccount;
         this.dateOpened = new Date();
         this.lastTransactionDate = new Date();
     }
 
-    // Generate a unique 12-digit account number
     private String generateUniqueAccountNumber() {
         Random rand = new Random();
-        Set<String> existingAccountNumbers = getExistingAccountNumbers(); // Read existing account numbers
-
-        String newAccountNumber;
-        do {
-            newAccountNumber = String.format("%012d", rand.nextLong(999999999999L)); // Generate 12-digit number
-        } while (existingAccountNumbers.contains(newAccountNumber)); // Ensure uniqueness
-
-        return newAccountNumber;
-    }
-
-    // Read existing account numbers from CSV
-    private Set<String> getExistingAccountNumbers() {
-        Set<String> accountNumbers = new HashSet<>();
-        File file = new File(CSV_FILE);
-
-        if (file.exists()) {
-            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    String[] parts = line.split(",");
-                    if (parts.length > 1) {
-                        accountNumbers.add(parts[1].trim()); // Account number is in the second column
-                    }
-                }
-            } catch (IOException e) {
-                System.err.println("Error reading CSV file: " + e.getMessage());
-            }
-        }
-        return accountNumbers;
+        return String.format("%012d", rand.nextLong(999999999999L));
     }
 
     public void deposit(double amount) {
         if (amount > 0) {
-            balance = Math.round((balance + amount) * 100.0) / 100.0;
+            balance += amount;
             lastTransactionDate = new Date();
             logTransaction("Deposit", amount);
         } else {
-            System.out.println("Invalid deposit amount. Please enter a positive dollar amount.");
+            System.out.println("Invalid deposit amount.");
         }
     }
 
     public boolean withdraw(double amount) {
-        if (amount > 0 && amount <= balance) {
-            balance -= amount;
-            lastTransactionDate = new Date();
-            logTransaction("Withdrawal", amount);
-            return true;
-        } else {
-            System.out.println(amount <= 0 ? "Invalid withdrawal amount." : "Insufficient funds. Your balance: $" + balance);
+        if (amount <= 0) {
+            System.out.println("Invalid withdrawal amount.");
             return false;
         }
+        
+        if (amount <= balance) {
+            balance -= amount;
+        } else if (isOverdraftProtectionEnabled && linkedSavingsAccount != null && linkedSavingsAccount.getBalance() >= (amount - balance)) {
+            double neededAmount = amount - balance;
+            linkedSavingsAccount.withdraw(neededAmount);
+            balance = 0;
+            System.out.println("Overdraft covered by savings account.");
+        } else if (amount <= balance + overdraftLimit) {
+            balance -= amount;
+            balance -= overdraftFee;
+            System.out.println("Overdraft occurred. Fee of $" + overdraftFee + " applied.");
+        } else {
+            System.out.println("Transaction declined. Insufficient funds and overdraft limit exceeded.");
+            return false;
+        }
+        
+        lastTransactionDate = new Date();
+        logTransaction("Withdrawal", amount);
+        return true;
     }
 
     public double getBalance() { return balance; }
-    
+    public Date getDateOpened() { return dateOpened; }
+    public Date getLastTransactionDate() { return lastTransactionDate; }
+    public boolean isOverdraftProtectionEnabled() { return isOverdraftProtectionEnabled; }
+    public double getOverdraftLimit() { return overdraftLimit; }
+    public double getOverdraftFee() { return overdraftFee; }
+
     private void logTransaction(String type, double amount) {
         System.out.println(type + " of $" + amount + " completed!");
     }
+}
 
-    public String getAccountNumber() { return accountNumber; }
-    public String getAccountHolderName() { return accountHolderName; }
-    public Date getDateOpened() { return dateOpened; }
-    public Date getLastTransactionDate() { return lastTransactionDate; }
-    public boolean getIsOverdraftProtectionEnabled() { return isOverdraftProtectionEnabled; }
-    public double getOverdraftLimit() { return overdraftLimit; }
+class SavingsAccount {
+    private String accountNumber;
+    private String accountHolderName;
+    private double balance;
 
-    // Append account details to CSV
-    public void appendToCSV() {
-        try (FileWriter writer = new FileWriter(CSV_FILE, true)) {
-            writer.append(accountHolderName).append(",");
-            writer.append(accountNumber).append(",");
-            writer.append(String.valueOf(balance)).append("\n");
-            System.out.println("Account details saved to CSV.");
-        } catch (IOException e) {
-            System.err.println("Error writing to CSV: " + e.getMessage());
-        }
+    // Constructor for existing savings account (not created in this code, just used)
+    public SavingsAccount(String accountNumber, String accountHolderName, double balance) {
+        this.accountNumber = accountNumber;
+        this.accountHolderName = accountHolderName;
+        this.balance = balance;
     }
+
+    public boolean withdraw(double amount) {
+        if (amount <= balance) {
+            balance -= amount;
+            return true;
+        }
+        return false;
+    }
+
+    public double getBalance() { return balance; }
+    public String getAccountHolderName() { return accountHolderName; }
+    public String getAccountNumber() { return accountNumber; }
 }
 
 public class CheckingAccountTest {
     public static void main(String[] args) {
         Scanner scan = new Scanner(System.in);
-        boolean breakloop = false;
-        double amount;
-        
-        CheckingAccount checking = new CheckingAccount(accountNumber, accountHolderName, balance);
+        System.out.print("Enter account holder's name: ");
+        String name = scan.nextLine();
 
-        while (!breakloop) {
-            System.out.print("What would you like to do? Check Balance[1], Make a Deposit[2], Make a Withdrawal[3], Get Other Info[4], Quit Checking Account Management[5]: ");
-            int checkingOption = scan.nextInt();
+        boolean overdraftProtection = false;
+        SavingsAccount linkedSavingsAccount = null; // Default to null until found in database
 
-            if (checkingOption == 1) {
-                System.out.println("Your current balance is: $" + checking.getBalance());
-            } 
-            else if (checkingOption == 2) {
-                System.out.print("How much would you like to deposit? ");
-                amount = scan.nextDouble();
-                checking.deposit(amount);
-            } 
-            else if (checkingOption == 3) {
-                System.out.print("How much would you like to withdraw? ");
-                amount = scan.nextDouble();
-                checking.withdraw(amount);
-            } 
-            else if (checkingOption == 4) {
-                System.out.println("Printing out checking account info...");
-                System.out.println("Account Number: " + checking.getAccountNumber());
-                System.out.println("Account Holder: " + checking.getAccountHolderName());
-                System.out.println("Overdraft Protection Status: " + checking.isOverdraftProtectionEnabled());
-                System.out.println("Overdraft Limit: $" + checking.getOverdraftLimit());
-                System.out.println("Account Opening Date: " + checking.getDateOpened());
-                System.out.println("Date of Last Transaction: " + checking.getLastTransactionDate());
-            } 
-            else if (checkingOption == 5) {
-                breakloop = true;
-                System.out.println("Exiting Checking Account Management.");
-            } 
-            else {
-                System.out.println("Invalid option. Please try again.");
+        while (true) {
+            System.out.print("Do you want overdraft protection? (true/false): ");
+            String input = scan.next().toLowerCase();
+            if (input.equals("true")) {
+                overdraftProtection = true;
+                // Simulate accessing an existing savings account from a database
+                // In a real-world scenario, you'd search for the savings account from a database here
+                System.out.print("Enter existing savings account number: ");
+                String savingsAccountNumber = scan.next();
+                // Assume you have a method to fetch the savings account from a database by account number
+                // For simulation, we'll just create a dummy savings account with balance 1000.00
+                linkedSavingsAccount = new SavingsAccount(savingsAccountNumber, name, 1000.00); // Dummy balance for example
+                break;
+            } else if (input.equals("false")) {
+                overdraftProtection = false;
+                break;
+            } else {
+                System.out.println("Invalid input. Please enter 'true' or 'false'.");
             }
         }
-        
+
+        CheckingAccount checking = new CheckingAccount(name, 0.00, overdraftProtection, linkedSavingsAccount);
+
+        boolean running = true;
+        while (running) {
+            System.out.print("Choose an option: Check Balance[1], Deposit[2], Withdraw[3], Account Info[4], Quit[5]: ");
+            if (!scan.hasNextInt()) {
+                System.out.println("Invalid input. Please enter a valid option (1-5). Restarting selection.");
+                scan.next();
+                continue;
+            }
+            int option = scan.nextInt();
+
+            if (option == 1) {
+                System.out.println("Balance: $" + checking.getBalance());
+            } else if (option == 2) {
+                System.out.print("Enter deposit amount: ");
+                while (!scan.hasNextDouble()) {
+                    System.out.println("Invalid input. Please enter a numeric value.");
+                    scan.next();
+                }
+                double amount = scan.nextDouble();
+                checking.deposit(amount);
+            } else if (option == 3) {
+                System.out.print("Enter withdrawal amount: ");
+                while (!scan.hasNextDouble()) {
+                    System.out.println("Invalid input. Please enter a numeric value.");
+                    scan.next();
+                }
+                double amount = scan.nextDouble();
+                checking.withdraw(amount);
+            } else if (option == 4) {
+                System.out.println("Account Opening Date: " + checking.getDateOpened());
+                System.out.println("Last Transaction Date: " + checking.getLastTransactionDate());
+                System.out.println("Overdraft Protection: " + (checking.isOverdraftProtectionEnabled() ? "Enabled" : "Disabled"));
+                if (!checking.isOverdraftProtectionEnabled()) {
+                    System.out.println("Overdraft Fee: $" + checking.getOverdraftFee());
+                }
+                System.out.println("Overdraft Limit: $" + checking.getOverdraftLimit());
+            } else if (option == 5) {
+                running = false;
+                System.out.println("Exiting.");
+            } else {
+                System.out.println("Invalid option. Try again.");
+            }
+        }
         scan.close();
     }
 }
