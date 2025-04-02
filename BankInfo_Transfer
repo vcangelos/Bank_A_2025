@@ -1,0 +1,156 @@
+import java.text.DecimalFormat;
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        DecimalFormat df = new DecimalFormat("0.00");
+
+        // Display options for bank choice
+        System.out.println("Choose from one of the banks below: ");
+        System.out.println("1. Bank of Old Bridge");
+        System.out.println("2. Bank of Dallas");
+        System.out.println("3. Bank of Los Angeles");
+        System.out.println("4. Bank of Detroit");
+        System.out.println("5. Bank of Denver");
+
+        int choice = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        Bank bank = null;
+        if (choice == 1) {
+            System.out.println("You chose Bank of Old Bridge");
+            bank = new Bank("Bank of Old Bridge", 7325551943L, "support@bankofoldbridge.com", 832954724);
+        } else if (choice == 2) {
+            System.out.println("You chose Bank of Dallas");
+            bank = new Bank("Bank of Dallas", 2145558273L, "support@bankofdallas.com", 723297259);
+        } else if (choice == 3) {
+            System.out.println("You chose Bank of Los Angeles");
+            bank = new Bank("Bank of Los Angeles", 3235554921L, "support@bankoflosangeles.com", 563934953);
+        } else if (choice == 4) {
+            System.out.println("You chose Bank of Detroit");
+            bank = new Bank("Bank of Detroit", 3135557610L, "support@bankofdetroit.com", 384239475);
+        } else if (choice == 5) {
+            System.out.println("You chose Bank of Denver");
+            bank = new Bank("Bank of Denver", 7205553486L, "support@bankofdenver.com", 274539242);
+        } else {
+            System.out.println("Invalid choice");
+            return;
+        }
+
+        System.out.println(bank);
+
+        // Account Selection
+        boolean accSelected = false;
+        String accountType = "";
+        System.out.print("What account would you like to transfer from, checking [1] or savings [2]? ");
+        while (!accSelected) {
+            String transAcc = scanner.nextLine().trim();
+            if (transAcc.equals("1")) {
+                accountType = "Checking";
+                accSelected = true;
+            } else if (transAcc.equals("2")) {
+                accountType = "Savings";
+                accSelected = true;
+            } else {
+                System.out.println("Invalid input. Please type 1 for checking or 2 for savings.");
+            }
+        }
+
+        // Account Number Validation
+        String accNum;
+        do {
+            System.out.print("Please enter your 12-digit account number: #");
+            accNum = scanner.nextLine().trim();
+        } while (!accNum.matches("\\d{12}"));
+
+        // Routing Number Validation
+        String routingNumber;
+        do {
+            System.out.print("Please enter your 9-digit routing number: #");
+            routingNumber = scanner.nextLine().trim();
+        } while (!routingNumber.matches("\\d{9}"));
+
+        // Billing Address
+        System.out.println("Please enter your billing address:");
+        System.out.print("Street Address: ");
+        String streetAddress = scanner.nextLine().trim();
+        System.out.print("City: ");
+        String city = scanner.nextLine().trim();
+        System.out.print("State: ");
+        String state = scanner.nextLine().trim();
+        String zipCode;
+        do {
+            System.out.print("Zip Code: ");
+            zipCode = scanner.nextLine().trim();
+        } while (!zipCode.matches("\\d{5}"));
+
+        // Country Selection
+        String country;
+        double transferFee = 0.00;
+        do {
+            System.out.print("Country/Continent (USA, EU, China, UK): ");
+            country = scanner.nextLine().trim().toUpperCase();
+            if (country.equals("USA")) {
+                transferFee = 0.02;
+            } else if (country.equals("EU")) {
+                transferFee = 0.05;
+            } else if (country.equals("CHINA")) {
+                transferFee = 0.07;
+            } else if (country.equals("UK")) {
+                transferFee = 0.05;
+            } else {
+                country = "";
+            }
+        } while (country.isEmpty());
+
+        // Transfer Amount
+        double amount;
+        do {
+            System.out.print("Enter the amount to transfer: ");
+            while (!scanner.hasNextDouble()) {
+                System.out.print("Invalid amount. Enter again: ");
+                scanner.next();
+            }
+            amount = scanner.nextDouble();
+        } while (amount <= 0);
+
+        double totalAmount = amount + (amount * transferFee);
+        scanner.close();
+
+        // Transfer Summary
+        System.out.println("\nTransfer Summary:");
+        System.out.println("Bank: " + bank.getBankType());
+        System.out.println("Account Type: " + accountType);
+        System.out.println("Transfer Amount: $" + df.format(amount));
+        System.out.println("Transfer Fee: " + (transferFee * 100) + "%");
+        System.out.println("Total Amount Deducted: $" + df.format(totalAmount));
+    }
+}
+
+class Bank {
+    private String bankType;
+    private long bankNumber;
+    private String bankEmail;
+    private int bankRouting;
+
+    public Bank(String bankType, long bankNumber, String bankEmail, int bankRouting) {
+        this.bankType = bankType;
+        this.bankNumber = bankNumber;
+        this.bankEmail = bankEmail;
+        this.bankRouting = bankRouting;
+    }
+
+    public String getBankType() { return bankType; }
+    public long getBankNumber() { return bankNumber; }
+    public String getBankEmail() { return bankEmail; }
+    public int getBankRouting() { return bankRouting; }
+
+    @Override
+    public String toString() {
+        return "Bank Type: " + bankType +
+                "\nBank Number: " + bankNumber +
+                "\nBank Email: " + bankEmail +
+                "\nBank Routing: " + bankRouting;
+    }
+}
