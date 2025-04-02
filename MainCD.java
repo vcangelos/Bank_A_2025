@@ -52,6 +52,8 @@ class CDWelcomeScreen {
                         System.out.println("You have selected CD option " + selection + " with an investment of $" + userAmount + ". At maturity, it will be worth $" + maturityAmount);
                         // Proceed with the CD purchase simulation
                         CDI.PurchaseCD(selection, userAmount);
+                        addUsers(2, CDI.getCD(selection).getTerm(), userAmount,CDI.getCD(selection).getIR());
+
                     } else {
                         System.out.println("Invalid investment amount. No CD purchased.");
                     }
@@ -80,11 +82,12 @@ class CDWelcomeScreen {
         } else {
             System.out.println("Invalid input. Please respond with 'yes' or 'no'.");
         }
-        addUsers(name,name,name,2,9999,2);
+        
+
 
     }
 
-    public static void addUsers(String username, String password, String DOB, int UniqueID, double termLength, double amount ) throws FileNotFoundException {
+    public static void addUsers(int UniqueID, double termLength, double amount, double interest ) throws FileNotFoundException {
         // Scanner to read existing CSV
         Scanner csvreader = new Scanner(new File("src/CD.csv"));
         File tempFile = new File("src/temp.csv"); // I originally had this as a file manually added in the beginning but I realized it would be better to create this in the method and delete the UserData that we had before
@@ -105,7 +108,7 @@ class CDWelcomeScreen {
         }
 
         // From video referenced in the beginning
-        out.println(String.join(",", username, password, DOB,  Integer.toString(UniqueID),  Double.toString(termLength), Double.toString(amount)));
+        out.println(String.join(",", Integer.toString(UniqueID),  Double.toString(termLength), Double.toString(amount), Double.toString(interest)));
 
         // Close resources since they wont be used unless the method is called
         csvreader.close();
@@ -141,6 +144,9 @@ class CD {
     // Getter methods
     public double getTerm() {
         return this.term;
+    }
+    public double getAmount() {
+        return this.Principal;
     }
 
     public double getIR() {
