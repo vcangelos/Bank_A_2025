@@ -1,150 +1,173 @@
-import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
+import java.io.BufferedWriter;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.time.LocalDate;
 import java.util.ArrayList;
-
-public class BankProject {
-
-    private ArrayList<String> checklist;
-
-    // Constructor
-
-    public BankProject() {
-        checklist = new ArrayList<>();
-    }
-
-    // Method to add an item to the checklist
-
-    public void addChecklistItem(String item) {
-        if (item != null && !item.trim().isEmpty()) {
-            checklist.add(item);
-        } else {
-            System.out.println("Invalid item. Cannot be null or empty.");
-        }
-    }
-
-    // Getter Method
-    
-    public ArrayList<String> getChecklist() {
-      return checklist;
-    }
-
-    // Display Method
-
-    public void displayChecklist() {
-        if (checklist.isEmpty()) {
-            System.out.println("Checklist is empty.");
-        } else {
-            for (int i = 0; i < checklist.size(); i++) {
-                System.out.println((i + 1) + "-" + checklist.get(i));
-            }
-        }
-    }
-
-    // Override toString() method
-
-    @Override
-    public String toString() {
-        return "BankProject Checklist: " + checklist.toString();
-    }
-    public static void main(String[] args) {
-      BankProject bankProject = new BankProject();
-
-        // Example: Adding a new item
-
-        bankProject.addChecklistItem("New Feature - Display Transaction History");
-
-        // Display the updated checklist
-
-        System.out.println("\nUpdated Checklist:");
-        bankProject.displayChecklist();
-
-        // Print the object using overridden toString()
-
-        System.out.println("\nBankProject Details: " + bankProject);
-
-        // Example usage of CreditCard class
-
-        CreditCard myCard = new CreditCard("1234-5678-9876-5432", "Visa", "12/25", 5000.0);
-        System.out.println("\nCreditCard Details: " + myCard);
-
-        // Create CSV file
-
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("bank_project.csv"))) {
-
-            // Write BankProject Checklist
-
-            writer.write("\"BankProject Checklist\"\n");
-            writer.write("\"Item Number\",\"Checklist Item\"\n");
-            for (int i = 0; i < bankProject.getChecklist().size(); i++) {
-                writer.write("\"" + (i + 1) + "\",\"" + bankProject.getChecklist().get(i) + "\"\n");
-            }
-
-            // Write CreditCard Details
-
-            writer.write("\n\"CreditCard Details\"\n");
-            writer.write("\"Card Type\",\"Card Number\",\"Expiration Date\",\"Credit Limit\",\"Outstanding Balance\",\"Credit Score\"\n");
-            writer.write("\"" + myCard.getCardType() + "\",\"" + myCard.maskCardNumber() + "\",\"" + myCard.getExpirationDate() + "\",\"" + myCard.getCreditLimit() + "\",\"" + myCard.getOutstandingBalance() + "\",\"" + myCard.getCreditScore() + "\"\n");
-            System.out.println("CSV file created successfully.");
-        } 
-            catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-}
-
-// CreditCard Class
+import java.util.Scanner;
+import java.util.concurrent.ThreadLocalRandom;
 
 class CreditCard {
- private String cardNumber;
-    private String cardType;
-    private String expirationDate;
-    private double creditLimit;
-    private double outstandingBalance;
-    private int creditScore;
 
+    private static final double MAX_CREDIT_LIMIT = 15000.00;
+    private static final double MIN_CREDIT_LIMIT = 500.00;
+    private static final double MAX_CREDIT_SCORE = 850;
+    private static final double MIN_CREDIT_SCORE = 300;
+    private static final double MAX_DTI_RATIO = 36.0;
+    private static final double MAX_CREDIT_UTILIZATION = 0.3;
+    private double limit;
+    private double currentBalance;
+    private double rate;
+    private ArrayList<Double> transactions;
+    private LocalDate billingCycleEndDate;
+    private long cardNumber;
+    private long cvv;
+    private String expiryDate;
+    
     // Constructor
 
-    public CreditCard(String cardNumber, String cardType, String expirationDate, double creditLimit) {
-        this.cardNumber = cardNumber;
-        this.cardType = cardType;
-        this.expirationDate = expirationDate;
-        this.creditLimit = creditLimit;
-        this.outstandingBalance = 0; // Default value
-        this.creditScore = 700; // Default credit score
+    public CreditCard() {
+        transactions = new ArrayList<>();
+        billingCycleEndDate = LocalDate.now().plusMonths(1);
+        expiryDate = "03/28"; 
     }
 
-    // Method to mask part of the card number for security
+    // Main method
 
-    public String maskCardNumber() {
-        return "****_****_****_" + cardNumber.substring(cardNumber.length() - 4);
-    }
-
-    // Override toString() method
-
-    @Override
-    public String toString() {
-        return "CreditCard[Card Type: " + cardType + ", Card Number: " + maskCardNumber() + ", Expiration Date: " + expirationDate + ", Credit Limit: $" + creditLimit + ", Outstanding Balance: $" + outstandingBalance + ", Credit Score: " + creditScore + "]";
+    public static void main(String[] args) 
+        Scanner scanner = new Scanner(System.in);
+        CreditCard creditCard = new CreditCard();
+        creditCard.mainMenu(scanner);
     }
 
-    // Getters for CreditCard properties
+    // Main Menu method with two different paths
 
-    public String getCardNumber() {
-        return cardNumber;
+    public void mainMenu(Scanner scanner) {
+        while (true) {
+            try {
+                System.out.println("\nWelcome to Credit Card Services:");
+                System.out.println("1. Do you have a credit card?");
+                System.out.println("2. Do you want to apply for a credit card?");
+                System.out.println("3. Exit");
+                int mainChoice = scanner.nextInt();
+                scanner.nextLine();
+                switch (mainChoice) {
+                    case 1:
+                        existingCardMenu(scanner);
+                        break;
+                    case 2:
+                        newCardMenu(scanner);
+                        break;
+                    case 3:
+                        System.out.println("Exiting program...");
+                        return;
+                    default:
+                        System.out.println("Invalid choice. Please enter a number between 1 and 3.");
+                }
+            } catch (Exception e) {
+                System.out.println("An error occurred: " + e.getMessage());
+                scanner.nextLine(); // Clear invalid input
+            }
+        }
     }
-    public String getCardType() {
-        return cardType;
+
+    // Pay Using Credit Card
+
+    public void payUsingCredit(Scanner scanner) {
+        System.out.println("Enter credit card number:");
+        long inputCardNumber = scanner.nextLong();
+        System.out.println("Enter CVV:");
+        long inputCvv = scanner.nextLong();
+        if (!validateCard(inputCardNumber, inputCvv)) {
+            System.out.println("Invalid credit card number or CVV.");
+            return;
+        }
+        System.out.println("Enter amount to swipe:");
+        double swipeAmount = scanner.nextDouble();
+        swipe(swipeAmount);
     }
-    public String getExpirationDate() {
-        return expirationDate;
+    
+    // Validate Card Against CSV File
+
+    public boolean validateCard(long inputCardNumber, long inputCvv) {
+        String csvFile = "csv/creditCardData.csv";
+        try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
+            String line;
+            br.readLine(); 
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(",");
+                long storedCardNumber = Long.parseLong(data[0].trim());
+                long storedCvv = Long.parseLong(data[1].trim());
+                if (storedCardNumber == inputCardNumber && storedCvv == inputCvv) {
+                    return true;
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading card data: " + e.getMessage());
+        }
+        return false;
     }
-    public double getCreditLimit() {
-        return creditLimit;
+
+    // Swipe Transaction
+
+    public void swipe(double swipeAmount) {
+        if (currentBalance + swipeAmount > limit) {
+            System.out.println("Transaction failed. Credit limit exceeded.");
+        } else {
+            currentBalance += swipeAmount;
+            transactions.add(swipeAmount);
+            System.out.println("Transaction successful.");
+        }
     }
-    public double getOutstandingBalance() {
-        return outstandingBalance;
+
+    public void printStatement() {
+        DecimalFormat df = new DecimalFormat("#0.00");
+        System.out.println("Bank Statement:");
+        transactions.forEach(transaction -> System.out.println("$" + transaction));
+        System.out.println("Current amount spent: $" + df.format(currentBalance));
+        LocalDate currentDate = LocalDate.now();
+        LocalDate lastDayOfMonth = currentDate.withDayOfMonth(currentDate.lengthOfMonth());
+        int daysLeft = lastDayOfMonth.getDayOfMonth() - currentDate.getDayOfMonth() + 1;
+        System.out.println("Days left in billing cycle: " + daysLeft);
     }
-    public int getCreditScore() {
-        return creditScore;
+
+    public void payBankStatement(Scanner scanner) {
+        DecimalFormat df = new DecimalFormat("#0.00");
+        double totalStatement = getTotalStatement();
+        double minimumPayment = totalStatement * 0.05;
+        System.out.println("Your minimum payment is: $" + df.format(minimumPayment));
+        System.out.println("Enter amount to pay:");
+        double payAmount = scanner.nextDouble();
+        if (payAmount >= minimumPayment && payAmount <= totalStatement) {
+            currentBalance -= payAmount;
+            System.out.println("Payment successful. Remaining balance: $" + df.format(currentBalance));
+        } else {
+            System.out.println("Payment failed. Please pay at least the minimum statement and not more than the total statement.");
+        }
+    }
+
+    public double getTotalStatement() {
+        return transactions.stream().mapToDouble(Double::doubleValue).sum();
+    }
+
+    public void writeUser DataToCSV(String filename, long cardNumber, long cvv,
+                                    double limit, String expiryDate, double rate) {
+        String directoryName = "csv";
+        File directory = new File(directoryName);
+        if (!directory.exists()) {
+            directory.mkdir();
+        }
+        String fullPath = directoryName + File.separator + filename;
+        try (FileWriter writer = new FileWriter(fullPath, true)) {
+            writer.write("Number,CVV,Credit Limit,Expiration Date,Default Interest Rate\n");
+            writer.write(String.format("%d,%d,%.2f,%s,%.3f\n",
+                    cardNumber, cvv, limit, expiryDate, rate));
+            System.out.println("User  data has been written to CSV file.");
+        } catch (IOException e) {
+            System.out.println("Error writing to CSV: " + e.getMessage());
+        }
     }
 } 
