@@ -1,0 +1,4 @@
+UniqueID,studentID,Full_Name,School,LoanAmount,AnnualIncome,Term, InterestRate, Time_Purchased, TotalRepayment
+
+2,111111,Landon Moscariello,Old Bridge,10000.0,10000.0,10,5.5,Tue Apr 08 13:14:19 EDT 2025,17081.44
+2,111111,Landon Moscariello,Old Bridge,20000.0,10000.0,10,5.5,Tue Apr 08 13:23:17 EDT 2025,34162.89
