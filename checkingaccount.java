@@ -6,12 +6,12 @@ import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
 class CheckingAccount {
-    private String accUserID; // The user ID associated with this account
+    private String uniqueID;
     private String accountNumber;
     private double balance;
     private String accountHolderName;
     private boolean isOverdraftProtectionEnabled;
-    private double overdraftLimit = 200.00;
+    private double overdraftLimit;
     private double overdraftFee = 35.00;
     private SavingsAccount linkedSavingsAccount;
     private Date dateOpened;
@@ -19,34 +19,59 @@ class CheckingAccount {
 
     private static final String CSV_FILE = "checkingaccount.csv";
 
-    // Constructor for NEW accounts
-    public CheckingAccount(String accUserID, String accountHolderName, double balance, boolean isOverdraftProtectionEnabled, SavingsAccount linkedSavingsAccount) {
-        this.accUserID = accUserID; // Store the accUserID
+    public CheckingAccount(String uniqueID, String accountHolderName, double balance, boolean isOverdraftProtectionEnabled, SavingsAccount linkedSavingsAccount, double overdraftLimit) {
+        this.uniqueID = uniqueID;
         this.accountHolderName = accountHolderName;
         this.balance = balance;
         this.accountNumber = generateUniqueAccountNumber();
         this.isOverdraftProtectionEnabled = isOverdraftProtectionEnabled;
         this.linkedSavingsAccount = linkedSavingsAccount;
+        this.overdraftLimit = overdraftLimit;
         this.dateOpened = new Date();
         this.lastTransactionDate = new Date();
-        saveToCSV(); // ONLY new accounts are saved here
+        saveToCSV();
         System.out.println("Account created successfully. Account number: " + accountNumber);
     }
 
-    // Constructor for EXISTING accounts
-    public CheckingAccount(String accUserID, String accountNumber, String accountHolderName, double balance, boolean isOverdraftProtectionEnabled, Date dateOpened, Date lastTransactionDate) {
-        this.accUserID = accUserID; // Store the accUserID
+    public CheckingAccount(String uniqueID, String accountNumber, String accountHolderName, double balance, boolean isOverdraftProtectionEnabled, double overdraftLimit, Date dateOpened, Date lastTransactionDate) {
+        this.uniqueID = uniqueID;
         this.accountNumber = accountNumber;
         this.accountHolderName = accountHolderName;
         this.balance = balance;
         this.isOverdraftProtectionEnabled = isOverdraftProtectionEnabled;
+        this.overdraftLimit = overdraftLimit;
         this.dateOpened = dateOpened;
         this.lastTransactionDate = lastTransactionDate;
-        this.linkedSavingsAccount = null; // You can add loading from file if needed
+        this.linkedSavingsAccount = null;
     }
 
     private String generateUniqueAccountNumber() {
-        return String.format("%012d", new Random().nextInt(999999999));
+        String newAccountNumber;
+        Set<String> existingNumbers = getExistingAccountNumbers();
+        do {
+            long number = (long)(Math.random() * 1_000_000_000_000L);
+            newAccountNumber = String.format("%012d", number);
+        } while (existingNumbers.contains(newAccountNumber));
+        return newAccountNumber;
+    }
+
+    private Set<String> getExistingAccountNumbers() {
+        Set<String> accountNumbers = new HashSet<>();
+        File file = new File(CSV_FILE);
+        if (!file.exists()) return accountNumbers;
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            br.readLine(); // Skip header
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(",");
+                if (data.length >= 2) {
+                    accountNumbers.add(data[1]);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading account numbers from CSV: " + e.getMessage());
+        }
+        return accountNumbers;
     }
 
     public void deposit(double amount) {
@@ -65,7 +90,7 @@ class CheckingAccount {
             System.out.println("Invalid withdrawal amount.");
             return false;
         }
-        
+
         if (amount <= balance) {
             balance -= amount;
             System.out.println("Withdrawal of $" + amount + " successful. New balance: $" + balance);
@@ -81,7 +106,7 @@ class CheckingAccount {
             System.out.println("Transaction declined. Insufficient funds and overdraft limit exceeded.");
             return false;
         }
-        
+
         lastTransactionDate = new Date();
         updateCSV();
         return true;
@@ -97,12 +122,22 @@ class CheckingAccount {
     private void saveToCSV() {
         File file = new File(CSV_FILE);
         boolean fileExists = file.exists();
-        
+
         try (FileWriter writer = new FileWriter(CSV_FILE, true)) {
             if (!fileExists) {
-                writer.append("accUserID,AccountNumber,AccountHolderName,Balance,OverdraftProtection,DateOpened,LastTransactionDate\n");
+                writer.append("uniqueID,AccountNumber,AccountHolderName,Balance,OverdraftProtection,OverdraftLimit,DateOpened,LastTransactionDate\n");
             }
-            writer.append(accUserID + "," + accountNumber + "," + accountHolderName + "," + balance + "," + isOverdraftProtectionEnabled + "," + dateOpened + "," + lastTransactionDate + "\n");
+            writer.append(String.join(",",
+                uniqueID,
+                accountNumber,
+                accountHolderName,
+                String.format("%.2f", balance),
+                String.valueOf(isOverdraftProtectionEnabled),
+                String.format("%.2f", overdraftLimit),
+                dateOpened.toString(),
+                lastTransactionDate.toString()
+            ));
+            writer.append("\n");
             System.out.println("Account details saved to CSV.");
         } catch (IOException e) {
             System.out.println("Error saving account to CSV: " + e.getMessage());
@@ -112,26 +147,28 @@ class CheckingAccount {
     private void updateCSV() {
         List<String> updatedLines = new ArrayList<>();
         boolean isFirstLine = true;
-        String header = "accUserID,AccountNumber,AccountHolderName,Balance,OverdraftProtection,DateOpened,LastTransactionDate";
+        String header = "uniqueID,AccountNumber,AccountHolderName,Balance,OverdraftProtection,OverdraftLimit,DateOpened,LastTransactionDate";
 
         try (BufferedReader br = new BufferedReader(new FileReader(CSV_FILE))) {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] data = line.split(",");
-                
-                // Preserve the header
+
                 if (isFirstLine) {
-                    if (!line.equals(header)) { // If there's no header, add it
+                    if (!line.equals(header)) {
                         updatedLines.add(header);
+                    } else {
+                        updatedLines.add(line);
                     }
                     isFirstLine = false;
+                    continue;
                 }
-                
-                if (data.length < 7) continue; // Adjust check to account for the new column
+
+                if (data.length < 8) continue;
 
                 if (data[1].equals(accountNumber)) {
                     data[3] = String.format("%.2f", balance);
-                    data[6] = new Date().toString();
+                    data[7] = new Date().toString();
                 }
                 updatedLines.add(String.join(",", data));
             }
@@ -151,7 +188,6 @@ class CheckingAccount {
         }
     }
 }
-
 
 class SavingsAccount {
     private String accountNumber;
@@ -182,6 +218,7 @@ public class CheckingAccountApp {
 
     public static void main(String[] args) {
         Scanner scan = new Scanner(System.in);
+        String userID = "0"; // uniqueID is set to 0
 
         System.out.println("Welcome to the Checking Account Menu!");
         CheckingAccount checking = null;
@@ -194,11 +231,10 @@ public class CheckingAccountApp {
                 checking = createNewAccount(scan);
                 break;
             } else {
-                checking = accessExistingAccount(scan);
+                checking = accessExistingAccount(scan, userID);
                 if (checking != null) {
                     break;
                 } else {
-
                     System.out.println("Returning to main menu...");
                 }
             }
@@ -241,6 +277,7 @@ public class CheckingAccountApp {
 
         boolean overdraftProtection = false;
         SavingsAccount linkedSavingsAccount = null;
+        double overdraftLimit = 200.00;
 
         while (true) {
             System.out.print("Do you want overdraft protection? (true/false): ");
@@ -258,32 +295,34 @@ public class CheckingAccountApp {
                 System.out.println("Invalid input. Please enter 'true' or 'false'.");
             }
         }
-        return new CheckingAccount(name, 0.00, overdraftProtection, linkedSavingsAccount);
+        return new CheckingAccount("0", name, 0.00, overdraftProtection, linkedSavingsAccount, overdraftLimit); // uniqueID set to 0
     }
 
-    private static CheckingAccount accessExistingAccount(Scanner scan) {
+    private static CheckingAccount accessExistingAccount(Scanner scan, String userID) {
         while (true) {
             System.out.print("Enter your account number (or type 'back' to return): ");
             String input = scan.next();
 
             if (input.equalsIgnoreCase("back")) {
-                return null; // Go back to main menu
+                return null;
             }
 
             try (BufferedReader br = new BufferedReader(new FileReader(CSV_FILE))) {
                 String line;
                 while ((line = br.readLine()) != null) {
                     String[] data = line.split(",");
-                    if (data.length < 6) continue;
-                    if (data[0].equals(input)) {
-                        String name = data[1];
-                        double balance = Double.parseDouble(data[2]);
-                        boolean overdraftProtection = Boolean.parseBoolean(data[3]);
+                    if (data.length < 8) continue;
+                    if (data[0].equals(userID) && data[1].equals(input)) {
+                        String uniqueID = data[0];
+                        String name = data[2];
+                        double balance = Double.parseDouble(data[3]);
+                        boolean overdraftProtection = Boolean.parseBoolean(data[4]);
+                        double overdraftLimit = Double.parseDouble(data[5]);
                         try {
                             SimpleDateFormat formatter = new SimpleDateFormat("E MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
-                            Date dateOpened = formatter.parse(data[4]);
-                            Date lastTransactionDate = formatter.parse(data[5]);
-                            CheckingAccount existing = new CheckingAccount(data[0], name, balance, overdraftProtection, dateOpened, lastTransactionDate);
+                            Date dateOpened = formatter.parse(data[6]);
+                            Date lastTransactionDate = formatter.parse(data[7]);
+                            CheckingAccount existing = new CheckingAccount(uniqueID, input, name, balance, overdraftProtection, overdraftLimit, dateOpened, lastTransactionDate);
                             System.out.println("Account found. Logging in...");
                             return existing;
                         } catch (ParseException e) {
@@ -296,7 +335,7 @@ public class CheckingAccountApp {
                 return null;
             }
 
-            System.out.println("Account not found. Please check the account number or type 'back' to return.");
+            System.out.println("Account not found or user ID does not match. Please try again or type 'back' to return.");
         }
     }
 
