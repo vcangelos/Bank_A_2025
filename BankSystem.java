@@ -1,9 +1,14 @@
 package bank;
 
-import java.io.*;
-import java.util.*;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Random;
+import java.util.Scanner;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.io.File;
+import java.io.FileNotFoundException;
 
 class Card {
     String cardNumber;
@@ -12,7 +17,7 @@ class Card {
         this.cardNumber = cardNumber;
     }
 
-    // Returns the card type
+// Credit card network #
     String getCardType() {
         return "Visa";
     }
@@ -25,12 +30,12 @@ class ExtendedCard extends Card {
         super(cardNumber);
     }
 
-// Generates a 3-digit CVC (no longer used)
+// CVC generator
     String generateCVC() {
         return String.format("%03d", random.nextInt(1000));
     }
 
-    // Generates expiration date between 2025 and 2030
+// Expiration generator 2025-2030
     String generateExpirationDate() {
         int month = random.nextInt(12) + 1;
         int year = random.nextInt(6) + 25;
@@ -42,12 +47,12 @@ class BankSecurity {
     private static final Random random = new Random();
     private static String storedHashedPin;
 
-// Generates a 4-digit card PIN
+// 4-digit card pin generator
     public static String generateCardPin() {
         return String.valueOf(1000 + random.nextInt(9000));
     }
 
-// Hashes a PIN using SHA-256
+// Hashes PIN (used as passcode)
     public static String hashPin(String pin) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -62,148 +67,83 @@ class BankSecurity {
         }
     }
 
-// Stores the hashed PIN
+// Stores hashed pin (used as passcode)
     public static void setAccountPin(String pin) {
         storedHashedPin = hashPin(pin);
     }
 
-// Validates entered PIN against stored hash
+// Validates pin (used as passcode)
     public static boolean validatePin(String enteredPin) {
         return hashPin(enteredPin).equals(storedHashedPin);
     }
 }
 
+// Test class
 public class BankSystem {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        while (true) {
-            // Display main menu
-            System.out.println("\n===== Bank System Menu =====");
-            System.out.println("1. Create New Card");
-            System.out.println("2. View Existing Cards");
-            System.out.println("3. Exit");
-            System.out.println("4. Close (Delete) a Card");
-            System.out.print("Select an option: ");
-            int choice = scanner.nextInt();
-            scanner.nextLine(); // Consume newline
+// Show the user options
+        System.out.println("Choose an option:");
+        System.out.println("1. Access existing card info");
+        System.out.println("2. Create a new card");
 
-    // menu
-            switch (choice) {
-                case 1:
-                    createNewCard(scanner);
-                    break;
-                case 2:
-                    viewExistingCards();
-                    break;
-                case 3:
-                    System.out.println("Exiting Bank System...");
-                    scanner.close();
-                    return;
-                case 4:
-                    closeCard(scanner);
-                    break;
-                default:
-                    System.out.println("Invalid option. Please try again.");
+        int option = scanner.nextInt();
+        scanner.nextLine();  // consume newline left after nextInt()
+
+        if (option == 1) {
+// Access existing card info
+            System.out.print("Enter cardholder's first name: ");
+            String firstName = scanner.nextLine();
+            System.out.print("Enter cardholder's last name: ");
+            String lastName = scanner.nextLine();
+            System.out.print("Enter your 4-digit Account PIN: ");
+            String enteredPin = scanner.nextLine();
+
+// Validate the PIN and check if the card info exists
+            if (validatePinForExistingCard(firstName, lastName, enteredPin)) {
+                System.out.println("Access granted to card details.");
+            } else {
+                System.out.println("Invalid PIN or no matching card information found.");
             }
-        }
-    }
+        } else if (option == 2) {
+// Create new card
+            System.out.println("Please provide the following information to create a new debit card:");
 
-// Handles creation of a new card
-    private static void createNewCard(Scanner scanner) {
-        System.out.print("Enter the cardholder's first name: ");
-        String firstName = scanner.nextLine();
-        System.out.print("Enter the cardholder's last name: ");
-        String lastName = scanner.nextLine();
+            System.out.print("Enter the cardholder's first name: ");
+            String firstName = scanner.nextLine();
+            System.out.print("Enter the cardholder's last name: ");
+            String lastName = scanner.nextLine();
 
-        ExtendedCard card = new ExtendedCard(generateVisaCardNumber());
-        String expDate = card.generateExpirationDate();
+// Generate card
+            ExtendedCard card = new ExtendedCard(generateVisaCardNumber());
+            System.out.println("\nCardholder Name: " + firstName + " " + lastName);
+            System.out.println("Card Type: " + card.getCardType());
+            System.out.println("Card Number: " + card.cardNumber);
+            System.out.println("CVC: " + card.generateCVC());
+            System.out.println("Expiration Date: " + card.generateExpirationDate());
 
-        System.out.println("\nCard successfully created!");
-        System.out.println("Cardholder Name: " + firstName + " " + lastName);
-        System.out.println("Card Type: " + card.getCardType());
-        System.out.println("Card Number: " + card.cardNumber);
-        System.out.println("Expiration Date: " + expDate);
+// Generate PIN
+            String cardPin = BankSecurity.generateCardPin();
+            System.out.println("Generated Card PIN: " + cardPin);
 
-        writeCardInfoToCSV(firstName, lastName, card.getCardType(), card.cardNumber, expDate);
-    }
+// "Set PIN"
+            System.out.print("Set your 4-digit Account PIN (this will be used to access your card): ");
+            String accountPin = scanner.nextLine();
+            BankSecurity.setAccountPin(accountPin);
+            System.out.println("Account PIN set successfully.");
 
-// Displays contents of the CSV
-    private static void viewExistingCards() {
-        File file = new File("card_info.csv");
-        if (!file.exists()) {
-            System.out.println("No existing cards found.");
-            return;
-        }
-
-        try (Scanner csvScanner = new Scanner(file)) {
-            System.out.println("\nContents of card_info.csv:");
-            while (csvScanner.hasNextLine()) {
-                System.out.println(csvScanner.nextLine());
-            }
-        } catch (FileNotFoundException e) {
-            System.out.println("Error reading CSV file: " + e.getMessage());
-        }
-    }
-
-// Deletes a specific card from CSV
-    private static void closeCard(Scanner scanner) {
-        System.out.print("Enter the cardholder's first name: ");
-        String firstName = scanner.nextLine().trim();
-        System.out.print("Enter the cardholder's last name: ");
-        String lastName = scanner.nextLine().trim();
-        System.out.print("Enter the card number: ");
-        String cardNumber = scanner.nextLine().trim();
-
-        File file = new File("card_info.csv");
-        if (!file.exists()) {
-            System.out.println("No cards found to delete.");
-            return;
-        }
-
-        List<String> updatedLines = new ArrayList<>();
-        boolean cardFound = false;
-
-// Read each line and filter out matching card
-        try (Scanner fileScanner = new Scanner(file)) {
-            while (fileScanner.hasNextLine()) {
-                String line = fileScanner.nextLine();
-                String[] parts = line.split(",");
-                if (parts.length < 5) continue;
-
-                String fName = parts[0].trim();
-                String lName = parts[1].trim();
-                String cNumber = parts[3].trim();
-
-                if (fName.equalsIgnoreCase(firstName) &&
-                    lName.equalsIgnoreCase(lastName) &&
-                    cNumber.equals(cardNumber)) {
-                    cardFound = true;
-                } else {
-                    updatedLines.add(line);
-                }
-            }
-        } catch (FileNotFoundException e) {
-            System.out.println("Error reading the file: " + e.getMessage());
-            return;
-        }
-
-    // Write updated data back to file if card was found
-        if (cardFound) {
-            try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
-                for (String line : updatedLines) {
-                    writer.println(line);
-                }
-                System.out.println("Card successfully deleted.");
-            } catch (IOException e) {
-                System.out.println("Error writing to file: " + e.getMessage());
-            }
+// Write to CSV
+            writeCardInfoToCSV(firstName, lastName, card.getCardType(), card.cardNumber, card.generateCVC(), card.generateExpirationDate(), cardPin, accountPin);
+            System.out.println("Card information written to card_info.csv.");
         } else {
-            System.out.println("No matching card found.");
+            System.out.println("Invalid option. Exiting.");
         }
+
+        scanner.close();
     }
 
-// Generates a random 16-digit Visa card number
+// Generates Visa card number
     private static String generateVisaCardNumber() {
         Random random = new Random();
         StringBuilder cardNumber = new StringBuilder("4");
@@ -213,13 +153,43 @@ public class BankSystem {
         return cardNumber.toString();
     }
 
-// Writes a card's info to the CSV file
-    private static void writeCardInfoToCSV(String firstName, String lastName, String cardType, String cardNumber, String expirationDate) {
+// Writes card information to CSV
+    private static void writeCardInfoToCSV(String firstName, String lastName, String cardType, String cardNumber, String cvc, String expirationDate, String cardPin, String accountPin) {
         try (PrintWriter writer = new PrintWriter(new FileWriter("card_info.csv", true))) {
-            writer.println(firstName + "," + lastName + "," + cardType + "," + cardNumber + "," + expirationDate);
-            System.out.println("Card information written to card_info.csv");
+            // Write plain account PIN, instead of hashing it
+            writer.println(firstName + "," + lastName + "," + cardType + "," + cardNumber + "," + cvc + "," + expirationDate + "," + cardPin + "," + accountPin);
         } catch (IOException e) {
             System.out.println("Error writing to CSV file: " + e.getMessage());
         }
+    }
+
+// Access card info from CSV and validate PIN
+    private static boolean validatePinForExistingCard(String firstName, String lastName, String enteredPin) {
+        try (Scanner csvScanner = new Scanner(new File("card_info.csv"))) {
+            while (csvScanner.hasNextLine()) {
+                String line = csvScanner.nextLine();
+                String[] cardInfo = line.split(",");
+                String storedFirstName = cardInfo[0];
+                String storedLastName = cardInfo[1];
+                String storedHashedAccountPin = cardInfo[7]; // The hashed account PIN is stored at index 7
+
+// Check if the entered PIN matches the stored plain PIN
+                if (storedFirstName.equalsIgnoreCase(firstName) && storedLastName.equalsIgnoreCase(lastName)
+                    && enteredPin.equals(storedHashedAccountPin)) {
+
+// Print card info
+                    System.out.println("Cardholder: " + storedFirstName + " " + storedLastName);
+                    System.out.println("Card Type: " + cardInfo[2]);
+                    System.out.println("Card Number: " + cardInfo[3]);
+                    System.out.println("CVC: " + cardInfo[4]);
+                    System.out.println("Expiration Date: " + cardInfo[5]);
+                    System.out.println("Generated Card PIN: " + cardInfo[6]);
+                    return true;
+                }
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("Error reading CSV file: " + e.getMessage());
+        }
+        return false;
     }
 }
