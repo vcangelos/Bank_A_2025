@@ -1,234 +1,372 @@
-package bank;
+package checkingaccount;
 
 import java.io.*;
 import java.util.*;
+import java.text.SimpleDateFormat;
+import java.text.ParseException;
 
-public class BankSystem {
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
+class CheckingAccount {
+    private String uniqueID;
+    private String accountNumber;
+    private double balance;
+    private String accountHolderName;
+    private boolean isOverdraftProtectionEnabled;
+    private double overdraftLimit;
+    private double overdraftFee = 35.00;
+    private SavingsAccount linkedSavingsAccount;
+    private Date dateOpened;
+    private Date lastTransactionDate;
 
-        // Ensure the CSV file exists before proceeding
-        File csvFile = new File("card_info.csv");
-        if (!csvFile.exists()) {
-            try {
-                // Create an empty file if it doesn't exist
-                csvFile.createNewFile();
-            } catch (IOException e) {
-                System.out.println("Error creating the CSV file: " + e.getMessage());
-                return;  // Exit if we can't create the file
-            }
-        }
+    private static final String CSV_FILE = "checkingaccount.csv";
 
-        // Main loop
-        while (true) {
-            System.out.println("Choose an option:");
-            System.out.println("1. Access existing card info");
-            System.out.println("2. Create a new card");
-            System.out.println("3. Close a debit card");
-
-            String option = scanner.nextLine().trim();  // Read input as a string
-
-            if (option.equals("1")) {
-                // Access existing card info
-                accessCardInfo(scanner);
-            } else if (option.equals("2")) {
-                // Create new card
-                createNewCard(scanner);
-            } else if (option.equals("3")) {
-                // Close debit card
-                closeDebitCard(scanner);
-            } else {
-                System.out.println("Invalid option. Please try again.");
-            }
-        }
+    public CheckingAccount(String uniqueID, String accountHolderName, double balance, boolean isOverdraftProtectionEnabled, SavingsAccount linkedSavingsAccount, double overdraftLimit) {
+        this.uniqueID = uniqueID;
+        this.accountHolderName = accountHolderName;
+        this.balance = balance;
+        this.accountNumber = generateUniqueAccountNumber();
+        this.isOverdraftProtectionEnabled = isOverdraftProtectionEnabled;
+        this.linkedSavingsAccount = linkedSavingsAccount;
+        this.overdraftLimit = overdraftLimit;
+        this.dateOpened = new Date();
+        this.lastTransactionDate = new Date();
+        saveToCSV();
+        System.out.println("Account created successfully. Account number: " + accountNumber);
     }
 
-    // Function to access existing card info
-    private static void accessCardInfo(Scanner scanner) {
-        System.out.print("Enter cardholder's first name: ");
-        String firstName = scanner.nextLine();
-        System.out.print("Enter cardholder's last name: ");
-        String lastName = scanner.nextLine();
-        System.out.print("Enter your 4-digit Account PIN: ");
-        String enteredPin = scanner.nextLine();
-
-        if (validatePinForExistingCard(firstName, lastName, enteredPin)) {
-            // Display card info after successful PIN validation
-            System.out.println("Access granted. Here are the card details:");
-            showCardInfo(firstName, lastName);  // Show card info
-        } else {
-            System.out.println("Invalid PIN or no matching card information found.");
-        }
-
-        // Ask the user to type 'back' to return to the main menu
-        System.out.println("Type 'back' to return to the main menu.");
-        while (true) {
-            String backInput = scanner.nextLine().trim().toLowerCase();
-            if (backInput.equals("back")) {
-                break;  // Break the loop and return to the main menu
-            } else {
-                System.out.println("Invalid input. Type 'back' to return to the main menu.");
-            }
-        }
+    public CheckingAccount(String uniqueID, String accountNumber, String accountHolderName, double balance, boolean isOverdraftProtectionEnabled, double overdraftLimit, Date dateOpened, Date lastTransactionDate) {
+        this.uniqueID = uniqueID;
+        this.accountNumber = accountNumber;
+        this.accountHolderName = accountHolderName;
+        this.balance = balance;
+        this.isOverdraftProtectionEnabled = isOverdraftProtectionEnabled;
+        this.overdraftLimit = overdraftLimit;
+        this.dateOpened = dateOpened;
+        this.lastTransactionDate = lastTransactionDate;
+        this.linkedSavingsAccount = null;
     }
 
-    // Function to show card info (called after PIN validation)
-    private static void showCardInfo(String firstName, String lastName) {
-        try (Scanner csvScanner = new Scanner(new File("card_info.csv"))) {
-            while (csvScanner.hasNextLine()) {
-                String line = csvScanner.nextLine();
-                String[] cardInfo = line.split(",");
-                String storedFirstName = cardInfo[0];
-                String storedLastName = cardInfo[1];
+    private String generateUniqueAccountNumber() {
+        String newAccountNumber;
+        Set<String> existingNumbers = getExistingAccountNumbers();
+        do {
+            long number = (long)(Math.random() * 1_000_000_000_000L);
+            newAccountNumber = String.format("%012d", number);
+        } while (existingNumbers.contains(newAccountNumber));
+        return newAccountNumber;
+    }
 
-                // Check if the first name and last name match
-                if (storedFirstName.equalsIgnoreCase(firstName) && storedLastName.equalsIgnoreCase(lastName)) {
-                    System.out.println("Cardholder: " + storedFirstName + " " + storedLastName);
-                    System.out.println("Card Type: " + cardInfo[2]);
-                    System.out.println("Card Number: " + cardInfo[3]);
-                    System.out.println("CVC: " + cardInfo[4]);
-                    System.out.println("Expiration Date: " + cardInfo[5]);
-                    return;  // Return once the matching card info is found
+    private Set<String> getExistingAccountNumbers() {
+        Set<String> accountNumbers = new HashSet<>();
+        File file = new File(CSV_FILE);
+        if (!file.exists()) return accountNumbers;
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            br.readLine(); // Skip header
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(",");
+                if (data.length >= 2) {
+                    accountNumbers.add(data[1]);
                 }
             }
-            System.out.println("No matching card information found.");
-        } catch (FileNotFoundException e) {
-            System.out.println("Error reading the CSV file: " + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("Error reading account numbers from CSV: " + e.getMessage());
         }
+        return accountNumbers;
     }
 
-    // Function to create a new card
-    private static void createNewCard(Scanner scanner) {
-        System.out.println("Please provide the following information to create a new debit card:");
-        System.out.print("Enter the cardholder's first name: ");
-        String firstName = scanner.nextLine();
-        System.out.print("Enter the cardholder's last name: ");
-        String lastName = scanner.nextLine();
-
-        // Here you would generate a new card and PIN
-        String cardNumber = "4" + (1000000000000000L + (long)(Math.random() * 1000000000000000L));
-        String cvc = String.format("%03d", (int)(Math.random() * 1000));
-        String expirationDate = "12/25"; // Example expiration date
-
-        System.out.println("\nCardholder Name: " + firstName + " " + lastName);
-        System.out.println("Card Type: Visa");
-        System.out.println("Card Number: " + cardNumber);
-        System.out.println("CVC: " + cvc);
-        System.out.println("Expiration Date: " + expirationDate);
-
-        // Ask the user to set the 4-digit Account PIN
-        System.out.print("Set your 4-digit Account PIN (this will be used to access your card): ");
-        String accountPin = scanner.nextLine();
-
-        // Save the card information and PIN to CSV
-        writeCardInfoToCSV(firstName, lastName, "Visa", cardNumber, cvc, expirationDate, accountPin);
-        System.out.println("Card created successfully and saved to card_info.csv.");
-
-        // Prompt the user to type 'back' to return to the main menu
-        System.out.println("Card creation successful. Type 'back' to return to the main menu.");
-        while (true) {
-            String backInput = scanner.nextLine().trim().toLowerCase();
-            if (backInput.equals("back")) {
-                break;  // Break the loop and return to the main menu
-            } else {
-                System.out.println("Invalid input. Type 'back' to return to the main menu.");
-            }
-        }
-    }
-
-    // Function to close a debit card (remove from CSV)
-    private static void closeDebitCard(Scanner scanner) {
-        System.out.print("Enter cardholder's first name: ");
-        String firstName = scanner.nextLine();
-        System.out.print("Enter cardholder's last name: ");
-        String lastName = scanner.nextLine();
-        System.out.print("Enter your 4-digit Account PIN: ");
-        String enteredPin = scanner.nextLine();
-
-        if (removeCardFromCSV(firstName, lastName, enteredPin)) {
-            System.out.println("Debit card closed successfully.");
-            
-            // Prompt the user to type "back" to return to the menu
-            System.out.println("Type 'back' to return to the main menu.");
-            while (true) {
-                String backInput = scanner.nextLine().trim().toLowerCase();
-                if (backInput.equals("back")) {
-                    break;  // Break the loop and return to the main menu
-                } else {
-                    System.out.println("Invalid input. Type 'back' to return to the main menu.");
-                }
-            }
+    public void deposit(double amount) {
+        if (amount > 0) {
+            balance += amount;
+            lastTransactionDate = new Date();
+            updateCSV();
+            System.out.println("Deposit of $" + amount + " successful. New balance: $" + balance);
         } else {
-            System.out.println("Invalid PIN or no matching card information found.");
+            System.out.println("Invalid deposit amount.");
         }
     }
 
-    // Function to write card info to CSV file
-    private static void writeCardInfoToCSV(String firstName, String lastName, String cardType, String cardNumber, String cvc, String expirationDate, String accountPin) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter("card_info.csv", true))) {
-            writer.println(firstName + "," + lastName + "," + cardType + "," + cardNumber + "," + cvc + "," + expirationDate + "," + accountPin);
+    public boolean withdraw(double amount) {
+        if (amount <= 0) {
+            System.out.println("Invalid withdrawal amount.");
+            return false;
+        }
+
+        if (amount <= balance) {
+            balance -= amount;
+            System.out.println("Withdrawal of $" + amount + " successful. New balance: $" + balance);
+        } else if (isOverdraftProtectionEnabled && linkedSavingsAccount != null && linkedSavingsAccount.getBalance() >= (amount - balance)) {
+            double neededAmount = amount - balance;
+            linkedSavingsAccount.withdraw(neededAmount);
+            balance = 0;
+            System.out.println("Overdraft covered by savings account. Withdrawal of $" + amount + " successful.");
+        } else if (amount <= balance + overdraftLimit) {
+            balance -= (amount + overdraftFee);
+            System.out.println("Overdraft occurred. Withdrawal of $" + amount + " successful. Fee of $" + overdraftFee + " applied.");
+        } else {
+            System.out.println("Transaction declined. Insufficient funds and overdraft limit exceeded.");
+            return false;
+        }
+
+        lastTransactionDate = new Date();
+        updateCSV();
+        return true;
+    }
+
+    public double getBalance() { return balance; }
+    public Date getDateOpened() { return dateOpened; }
+    public Date getLastTransactionDate() { return lastTransactionDate; }
+    public boolean isOverdraftProtectionEnabled() { return isOverdraftProtectionEnabled; }
+    public double getOverdraftLimit() { return overdraftLimit; }
+    public double getOverdraftFee() { return overdraftFee; }
+
+    private void saveToCSV() {
+        File file = new File(CSV_FILE);
+        boolean fileExists = file.exists();
+
+        try (FileWriter writer = new FileWriter(CSV_FILE, true)) {
+            if (!fileExists) {
+                writer.append("uniqueID,AccountNumber,AccountHolderName,Balance,OverdraftProtection,OverdraftLimit,DateOpened,LastTransactionDate\n");
+            }
+            writer.append(String.join(",",
+                uniqueID,
+                accountNumber,
+                accountHolderName,
+                String.format("%.2f", balance),
+                String.valueOf(isOverdraftProtectionEnabled),
+                String.format("%.2f", overdraftLimit),
+                dateOpened.toString(),
+                lastTransactionDate.toString()
+            ));
+            writer.append("\n");
+            System.out.println("Account details saved to CSV.");
+        } catch (IOException e) {
+            System.out.println("Error saving account to CSV: " + e.getMessage());
+        }
+    }
+
+    private void updateCSV() {
+        List<String> updatedLines = new ArrayList<>();
+        boolean isFirstLine = true;
+        String header = "uniqueID,AccountNumber,AccountHolderName,Balance,OverdraftProtection,OverdraftLimit,DateOpened,LastTransactionDate";
+
+        try (BufferedReader br = new BufferedReader(new FileReader(CSV_FILE))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(",");
+
+                if (isFirstLine) {
+                    if (!line.equals(header)) {
+                        updatedLines.add(header);
+                    } else {
+                        updatedLines.add(line);
+                    }
+                    isFirstLine = false;
+                    continue;
+                }
+
+                if (data.length < 8) continue;
+
+                if (data[1].equals(accountNumber)) {
+                    data[3] = String.format("%.2f", balance);
+                    data[7] = new Date().toString();
+                }
+                updatedLines.add(String.join(",", data));
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading CSV file: " + e.getMessage());
+            return;
+        }
+
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(CSV_FILE))) {
+            for (String line : updatedLines) {
+                bw.write(line);
+                bw.newLine();
+            }
+            System.out.println("CSV file updated successfully.");
         } catch (IOException e) {
             System.out.println("Error writing to CSV file: " + e.getMessage());
         }
     }
+}
 
-    // Function to validate PIN for existing card
-    private static boolean validatePinForExistingCard(String firstName, String lastName, String enteredPin) {
-        try (Scanner csvScanner = new Scanner(new File("card_info.csv"))) {
-            while (csvScanner.hasNextLine()) {
-                String line = csvScanner.nextLine();
-                String[] cardInfo = line.split(",");
-                String storedFirstName = cardInfo[0];
-                String storedLastName = cardInfo[1];
-                String storedAccountPin = cardInfo[6]; // The Account PIN is stored at index 6
+class SavingsAccount {
+    private String accountNumber;
+    private String accountHolderName;
+    private double balance;
 
-                // Check if the entered PIN matches the stored PIN
-                if (storedFirstName.equalsIgnoreCase(firstName) && storedLastName.equalsIgnoreCase(lastName)
-                    && storedAccountPin.equals(enteredPin)) {
-                    return true;
-                }
-            }
-        } catch (FileNotFoundException e) {
-            System.out.println("Error reading the CSV file: " + e.getMessage());
+    public SavingsAccount(String accountNumber, String accountHolderName, double balance) {
+        this.accountNumber = accountNumber;
+        this.accountHolderName = accountHolderName;
+        this.balance = balance;
+    }
+
+    public boolean withdraw(double amount) {
+        if (amount <= balance) {
+            balance -= amount;
+            return true;
         }
         return false;
     }
 
-    // Function to remove a card from the CSV file
-    private static boolean removeCardFromCSV(String firstName, String lastName, String enteredPin) {
-        List<String> lines = new ArrayList<>();
-        boolean cardFound = false;
+    public double getBalance() { return balance; }
+    public String getAccountHolderName() { return accountHolderName; }
+    public String getAccountNumber() { return accountNumber; }
+}
 
-        try (Scanner csvScanner = new Scanner(new File("card_info.csv"))) {
-            while (csvScanner.hasNextLine()) {
-                String line = csvScanner.nextLine();
-                String[] cardInfo = line.split(",");
-                String storedFirstName = cardInfo[0];
-                String storedLastName = cardInfo[1];
-                String storedAccountPin = cardInfo[6];
+public class CheckingAccountApp {
+    private static final String CSV_FILE = "checkingaccount.csv";
 
-                // If the card matches the entered data, skip adding it to the new list
-                if (storedFirstName.equalsIgnoreCase(firstName) && storedLastName.equalsIgnoreCase(lastName)
-                        && storedAccountPin.equals(enteredPin)) {
-                    cardFound = true; // Found the card, so don't add it
-                    continue;
-                }
-                lines.add(line);
-            }
+    public static void main(String[] args) {
+        Scanner scan = new Scanner(System.in);
+        String userID = "0"; // uniqueID is set to 0
 
-            if (cardFound) {
-                // Re-write the CSV file without the deleted card
-                try (PrintWriter writer = new PrintWriter(new FileWriter("card_info.csv"))) {
-                    for (String line : lines) {
-                        writer.println(line);
-                    }
-                } catch (IOException e) {
-                    System.out.println("Error writing the CSV file: " + e.getMessage());
+        System.out.println("Welcome to the Checking Account Menu!");
+        CheckingAccount checking = null;
+
+        while (true) {
+            System.out.println("Do you want to [1] Create a new account or [2] Access an existing account? Enter 1 or 2: ");
+            int choice = getValidInput(scan, 1, 2);
+
+            if (choice == 1) {
+                checking = createNewAccount(scan);
+                break;
+            } else {
+                checking = accessExistingAccount(scan, userID);
+                if (checking != null) {
+                    break;
+                } else {
+                    System.out.println("Returning to main menu...");
                 }
             }
-        } catch (FileNotFoundException e) {
-            System.out.println("Error reading the CSV file: " + e.getMessage());
         }
-        return cardFound;
+
+        boolean running = true;
+        while (running) {
+            System.out.print("Choose an option: Check Balance[1], Deposit[2], Withdraw[3], Account Info[4], Quit[5]: ");
+            int option = getValidInput(scan, 1, 5);
+
+            switch (option) {
+                case 1:
+                    System.out.println("Balance: $" + checking.getBalance());
+                    break;
+                case 2:
+                    System.out.print("Enter deposit amount: ");
+                    double depositAmount = getValidDouble(scan);
+                    checking.deposit(depositAmount);
+                    break;
+                case 3:
+                    System.out.print("Enter withdrawal amount: ");
+                    double withdrawalAmount = getValidDouble(scan);
+                    checking.withdraw(withdrawalAmount);
+                    break;
+                case 4:
+                    displayAccountInfo(checking);
+                    break;
+                case 5:
+                    running = false;
+                    System.out.println("Exiting.");
+                    break;
+            }
+        }
+        scan.close();
+    }
+
+    private static CheckingAccount createNewAccount(Scanner scan) {
+        System.out.print("Enter account holder's name: ");
+        String name = scan.next();
+
+        boolean overdraftProtection = false;
+        SavingsAccount linkedSavingsAccount = null;
+        double overdraftLimit = 200.00;
+
+        while (true) {
+            System.out.print("Do you want overdraft protection? (true/false): ");
+            String input = scan.next().toLowerCase();
+            if (input.equals("true")) {
+                overdraftProtection = true;
+                System.out.print("Enter existing savings account number: ");
+                String savingsAccountNumber = scan.next();
+                linkedSavingsAccount = new SavingsAccount(savingsAccountNumber, name, 1000.00);
+                break;
+            } else if (input.equals("false")) {
+                overdraftProtection = false;
+                break;
+            } else {
+                System.out.println("Invalid input. Please enter 'true' or 'false'.");
+            }
+        }
+        return new CheckingAccount("0", name, 0.00, overdraftProtection, linkedSavingsAccount, overdraftLimit); // uniqueID set to 0
+    }
+
+    private static CheckingAccount accessExistingAccount(Scanner scan, String userID) {
+        while (true) {
+            System.out.print("Enter your account number (or type 'back' to return): ");
+            String input = scan.next();
+
+            if (input.equalsIgnoreCase("back")) {
+                return null;
+            }
+
+            try (BufferedReader br = new BufferedReader(new FileReader(CSV_FILE))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    String[] data = line.split(",");
+                    if (data.length < 8) continue;
+                    if (data[0].equals(userID) && data[1].equals(input)) {
+                        String uniqueID = data[0];
+                        String name = data[2];
+                        double balance = Double.parseDouble(data[3]);
+                        boolean overdraftProtection = Boolean.parseBoolean(data[4]);
+                        double overdraftLimit = Double.parseDouble(data[5]);
+                        try {
+                            SimpleDateFormat formatter = new SimpleDateFormat("E MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
+                            Date dateOpened = formatter.parse(data[6]);
+                            Date lastTransactionDate = formatter.parse(data[7]);
+                            CheckingAccount existing = new CheckingAccount(uniqueID, input, name, balance, overdraftProtection, overdraftLimit, dateOpened, lastTransactionDate);
+                            System.out.println("Account found. Logging in...");
+                            return existing;
+                        } catch (ParseException e) {
+                            System.out.println("Error parsing date: " + e.getMessage());
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                System.out.println("Error reading account file: " + e.getMessage());
+                return null;
+            }
+
+            System.out.println("Account not found or user ID does not match. Please try again or type 'back' to return.");
+        }
+    }
+
+    private static void displayAccountInfo(CheckingAccount checking) {
+        System.out.println("Account Opening Date: " + checking.getDateOpened());
+        System.out.println("Last Transaction Date: " + checking.getLastTransactionDate());
+        System.out.println("Overdraft Protection: " + (checking.isOverdraftProtectionEnabled() ? "Enabled" : "Disabled"));
+        if (!checking.isOverdraftProtectionEnabled()) {
+            System.out.println("Overdraft Fee: $" + checking.getOverdraftFee());
+        }
+        System.out.println("Overdraft Limit: $" + checking.getOverdraftLimit());
+    }
+
+    private static int getValidInput(Scanner scan, int min, int max) {
+        while (!scan.hasNextInt()) {
+            System.out.println("Invalid input. Please enter a number between " + min + " and " + max + ".");
+            scan.next();
+        }
+        int choice = scan.nextInt();
+        if (choice < min || choice > max) {
+            System.out.println("Invalid choice. Try again.");
+            return getValidInput(scan, min, max);
+        }
+        return choice;
+    }
+
+    private static double getValidDouble(Scanner scan) {
+        while (!scan.hasNextDouble()) {
+            System.out.println("Invalid input. Please enter a valid number.");
+            scan.next();
+        }
+        return scan.nextDouble();
     }
 }
