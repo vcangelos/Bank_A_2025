@@ -13,7 +13,7 @@ class CDWelcomeScreen {
         System.out.println("Welcome New User " + name);
 
 
-        int UniqueId = 12345; // Soren FIX Thanks 
+        int uniqueID = 12345; // Soren FIX Thanks 
 
         // Ask if the user wants to create a certificate of deposit
         System.out.println("Would you like to create a certificate of deposit at this time? (yes/no)");
@@ -83,7 +83,7 @@ class CDWelcomeScreen {
         } else {
             System.out.println("Invalid input. Please respond with 'yes' or 'no'.");
         }
-        addUserstoCD(name,name,name,2,9999,2);
+        addUserstoCD(name,name,name,2,uniqueID,2);
 
     }
 
