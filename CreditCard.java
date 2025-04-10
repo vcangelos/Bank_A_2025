@@ -10,6 +10,13 @@ import java.util.ArrayList;
 import java.util.Scanner;
 import java.util.concurrent.ThreadLocalRandom;
 
+
+// Main method
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        CreditCard creditCard = new CreditCard();
+        creditCard.mainMenu(scanner);
+    }
 class CreditCard {
 
     // Constants
@@ -37,12 +44,7 @@ class CreditCard {
         expirationDate = "03/28"; // Default expiration date
     }
 
-    // Main method
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        CreditCard creditCard = new CreditCard();
-        creditCard.mainMenu(scanner);
-    }
+    
 
     // Main Menu method with two different paths
     public void mainMenu(Scanner scanner) {
