@@ -476,6 +476,14 @@ public class SafetyDepositBox {
 }
 
 
+
+
+
+
+//fix so a person cant create a box after they already created a box
+//connect data from souren's csv to connect user data with their uniqueIds
+//ignoreCaps on input
+
 import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
