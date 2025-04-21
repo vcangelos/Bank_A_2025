@@ -751,57 +751,42 @@ public class SafetyDepositBox {
         try {
             List<String> updatedLines = new ArrayList<>();
             boolean headerAdded = false;
+            String targetUniqueId = modifiedBoxKey.split("_")[0];
 
             try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    String[] parts = line.split(",");
+                    String[] parts = line.split(",", -1); // keep empty values
 
+                    // Header row
                     if (!headerAdded && line.toLowerCase().contains("boxkey")) {
                         updatedLines.add(line);
                         headerAdded = true;
                         continue;
                     }
 
-                    if (parts.length >= 12 && boxes.containsKey(parts[0])) {
-                        BoxDetails box = boxes.get(parts[0]);
-                        String updatedLine = String.join(",", Arrays.asList(
-                            parts[0],
-                            box.getSize(),
-                            box.getDimensions(),
-                            String.valueOf(box.getCost()),
-                            box.getContents(),
-                            String.valueOf(box.getTotalValue()),
-                            action,
-                            new SimpleDateFormat("MM/dd/yyyy").format(new Date()),
-                            parts[8], parts[9], parts[10], parts[11]
-                        ));
-                        updatedLines.add(updatedLine);
-                    } else {
-                        updatedLines.add(line); // Keep untouched
+                    // Match the UniqueId column (11th index == 10)
+                    if (parts.length >= 12 && parts[10].equals(targetUniqueId)) {
+                        BoxDetails box = boxes.get(modifiedBoxKey);
+                        if (box != null) {
+                            String updatedLine = String.join(",", Arrays.asList(
+                                modifiedBoxKey,
+                                box.getSize(),
+                                box.getDimensions(),
+                                String.valueOf(box.getCost()),
+                                box.getContents(),
+                                String.valueOf(box.getTotalValue()),
+                                action,
+                                new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(new Date()),
+                                parts[8], parts[9], parts[10], parts[11] // preserve auth info
+                            ));
+                            updatedLines.add(updatedLine);
+                            continue;
+                        }
                     }
-                }
-            }
 
-            // Add any new box not already in the file
-            for (Map.Entry<String, BoxDetails> entry : boxes.entrySet()) {
-                boolean exists = updatedLines.stream().anyMatch(l -> l.startsWith(entry.getKey()));
-                if (!exists) {
-                    BoxDetails box = entry.getValue();
-                    String boxKey = entry.getKey();
-                    String uniqueId = boxKey.split("_")[0];
-                    String newLine = String.join(",", Arrays.asList(
-                        boxKey,
-                        box.getSize(),
-                        box.getDimensions(),
-                        String.valueOf(box.getCost()),
-                        box.getContents(),
-                        String.valueOf(box.getTotalValue()),
-                        action,
-                        new SimpleDateFormat("MM/dd/yyyy").format(new Date()),
-                        "", "", uniqueId, ""
-                    ));
-                    updatedLines.add(newLine);
+                    // Preserve untouched lines
+                    updatedLines.add(line);
                 }
             }
 
@@ -812,6 +797,7 @@ public class SafetyDepositBox {
                 }
             }
 
+            System.out.println("Box was successfully: " + action);
         } catch (IOException e) {
             System.out.println("Error saving to CSV: " + e.getMessage());
         }
@@ -819,7 +805,8 @@ public class SafetyDepositBox {
 
 
 
-  private static void saveBoxesToCSVWithAction(String modifiedBoxKey, String action) {
+
+  /*private static void saveBoxesToCSVWithAction(String modifiedBoxKey, String action) {
 	    try {
 	        List<String> updatedLines = new ArrayList<>();
 	        boolean headerAdded = false;
@@ -875,7 +862,7 @@ public class SafetyDepositBox {
 	    } catch (IOException e) {
 	        System.out.println("Error saving to CSV: " + e.getMessage());
 	    }
-	}
+	}*/
 
 
     private static void modifyBoxContents(Scanner scanner, String uniqueId) {
@@ -911,9 +898,10 @@ public class SafetyDepositBox {
         box.setTotalValue(newValue);
 
         // Save updated box info with new action "Modified"
-        saveBoxesToCSVWithAction(userBoxKey, "Modified");
+        saveBoxesToCSV(userBoxKey, "Modified");
+ 
 
-        System.out.println("Box updated successfully.");
+        
     }
    
    private static void grantAccessToUser(Scanner scanner, String uniqueId) {
@@ -1098,7 +1086,8 @@ private static void authorizedUserMenu(String uniqueId, String permission) {
             this.size = size;
             this.dimensions = dimensions;
             this.cost = cost;
-            this.contents = contents;        }
+            this.contents = contents;  
+            this.totalValue = totalValue; }
 
         public String getSize() { return size; }
         public String getDimensions() { return dimensions; }
@@ -1109,3 +1098,4 @@ private static void authorizedUserMenu(String uniqueId, String permission) {
         public void setTotalValue(double totalValue) { this.totalValue = totalValue; }
     }
 }
+
