@@ -1,8 +1,9 @@
 package bank;
+
 import java.io.*;
 import java.util.*;
 
-public class ATMSystem { // Ensure the class name matches the file name "ATMSystem"
+public class ATMSystem {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
@@ -56,10 +57,10 @@ public class ATMSystem { // Ensure the class name matches the file name "ATMSyst
                 String[] cardInfo = line.split(",");
                 String storedFirstName = cardInfo[0];
                 String storedLastName = cardInfo[1];
-                String storedPin = cardInfo[5]; // Pin is at index 5
+                String storedPin = cardInfo[6]; // Account PIN is at index 6
 
                 // Validate the user details
-                if (storedFirstName.equalsIgnoreCase(firstName) && storedLastName.equalsIgnoreCase(lastName) 
+                if (storedFirstName.equalsIgnoreCase(firstName) && storedLastName.equalsIgnoreCase(lastName)
                         && storedPin.equals(pin)) {
                     return true;
                 }
