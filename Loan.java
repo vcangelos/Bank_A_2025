@@ -13,7 +13,7 @@ public class Loan {
     protected double interestRate; 
     protected int durationInYears; 
 
-    public Loan2(String borrowerName, double loanAmount, double interestRate, int durationInYears) {
+    public Loan(String borrowerName, double loanAmount, double interestRate, int durationInYears) {
         this.borrowerName = borrowerName; 
         this.loanAmount = loanAmount; 
         this.interestRate = interestRate; 
