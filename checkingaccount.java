@@ -16,10 +16,11 @@ class CheckingAccount {
     private SavingsAccount linkedSavingsAccount;
     private Date dateOpened;
     private Date lastTransactionDate;
+    private String routingNumber;
 
     private static final String CSV_FILE = "checkingaccount.csv";
 
-    public CheckingAccount(String uniqueID, String accountHolderName, double balance, boolean isOverdraftProtectionEnabled, SavingsAccount linkedSavingsAccount, double overdraftLimit) {
+    public CheckingAccount(String uniqueID, String accountHolderName, double balance, boolean isOverdraftProtectionEnabled, SavingsAccount linkedSavingsAccount, double overdraftLimit, String routingNumber) {
         this.uniqueID = uniqueID;
         this.accountHolderName = accountHolderName;
         this.balance = balance;
@@ -29,6 +30,7 @@ class CheckingAccount {
         this.overdraftLimit = overdraftLimit;
         this.dateOpened = new Date();
         this.lastTransactionDate = new Date();
+        this.routingNumber = routingNumber;
         saveToCSV();
         System.out.println("Account created successfully. Account number: " + accountNumber);
     }
@@ -125,7 +127,7 @@ class CheckingAccount {
 
         try (FileWriter writer = new FileWriter(CSV_FILE, true)) {
             if (!fileExists) {
-                writer.append("uniqueID,AccountNumber,AccountHolderName,Balance,OverdraftProtection,OverdraftLimit,DateOpened,LastTransactionDate\n");
+                writer.append("uniqueID,AccountNumber,AccountHolderName,Balance,OverdraftProtection,OverdraftLimit,DateOpened,LastTransactionDate,RoutingNumber\n");
             }
             writer.append(String.join(",",
                 uniqueID,
@@ -135,7 +137,8 @@ class CheckingAccount {
                 String.valueOf(isOverdraftProtectionEnabled),
                 String.format("%.2f", overdraftLimit),
                 dateOpened.toString(),
-                lastTransactionDate.toString()
+                lastTransactionDate.toString(),
+                routingNumber
             ));
             writer.append("\n");
             System.out.println("Account details saved to CSV.");
@@ -147,7 +150,7 @@ class CheckingAccount {
     private void updateCSV() {
         List<String> updatedLines = new ArrayList<>();
         boolean isFirstLine = true;
-        String header = "uniqueID,AccountNumber,AccountHolderName,Balance,OverdraftProtection,OverdraftLimit,DateOpened,LastTransactionDate";
+        String header = "uniqueID,AccountNumber,AccountHolderName,Balance,OverdraftProtection,OverdraftLimit,DateOpened,LastTransactionDate,RoutingNumber";
 
         try (BufferedReader br = new BufferedReader(new FileReader(CSV_FILE))) {
             String line;
@@ -301,7 +304,24 @@ public class CheckingAccountApp {
                 System.out.println("Invalid input. Please enter 'true' or 'false'.");
             }
         }
-        return new CheckingAccount("0", name, 0.00, overdraftProtection, linkedSavingsAccount, overdraftLimit);
+
+        String[] validRoutingNumbers = {
+            "832954724", "723297259", "563934953", "384239475", "274539242", "384507747"
+        };
+        Set<String> validSet = new HashSet<>(Arrays.asList(validRoutingNumbers));
+        String routingNumber;
+
+        while (true) {
+            System.out.print("Enter routing number: ");
+            routingNumber = scan.next();
+            if (validSet.contains(routingNumber)) {
+                break;
+            } else {
+                System.out.println("Invalid routing number. Please enter a valid one.");
+            }
+        }
+
+        return new CheckingAccount("0", name, 0.00, overdraftProtection, linkedSavingsAccount, overdraftLimit, routingNumber);
     }
 
     private static void displayAccountInfo(CheckingAccount checking) {
