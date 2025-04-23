@@ -36,6 +36,7 @@ class CreditCard {
     private long creditCardNumber;
     private long creditCardCVV;
     private String expirationDate;
+    private int UniqueID;
 
     // Constructor
     public CreditCard() {
@@ -51,7 +52,7 @@ class CreditCard {
         while (true) {
             try {
                 System.out.println("\nWelcome to Credit Card Services:");
-                System.out.println("1. Do you have a credit card?");
+                System.out.println("1. Do you have a credit card?");// search for unique id if no, do option 2
                 System.out.println("2. Do you want to apply for a credit card?");
                 System.out.println("3. Exit");
 
@@ -156,7 +157,7 @@ class CreditCard {
 
         // Display and save credit card terms
         creditCardTerms(creditCardNumber, creditCardCVV, expirationDate, interestRateD, creditLimit);
-        writeUserDataToCSV("creditCardData.csv", creditCardNumber, creditCardCVV, creditLimit, expirationDate, interestRateD);
+        writeUserDataToCSV("creditCardData.csv", creditCardNumber, creditCardCVV, creditLimit, expirationDate, interestRateD, UniqueID);
     }
 
     // Validate and get credit score
@@ -540,7 +541,7 @@ class CreditCard {
 
         // Display and save credit card terms
         creditCardTerms(creditCardNumber, creditCardCVV, expirationDate, interestRateD, creditLimit);
-        writeUserDataToCSV("creditCardData.csv", creditCardNumber, creditCardCVV, creditLimit, expirationDate, interestRateD);
+        writeUserDataToCSV("creditCardData.csv", creditCardNumber, creditCardCVV, creditLimit, expirationDate, interestRateD, UniqueID );
     }
 
     // Validate and get credit score
@@ -764,7 +765,7 @@ class CreditCard {
         try (FileWriter writer = new FileWriter(fullPath, true)) {
             writer.write("Number,CVV,Credit Limit,Expiration Date,Default Interest Rate\n");
             writer.write(String.format("%d,%d,%.2f,%s,%.3f\n",
-                    creditCardNumber, creditCardCVV, creditLimit, expirationDate, interestRateD));
+                    creditCardNumber, creditCardCVV, creditLimit, expirationDate, interestRateD, UniqueID));
             System.out.println("User data has been written to CSV file.");
         } catch (IOException e) {
             System.out.println("Error writing to CSV: " + e.getMessage());
