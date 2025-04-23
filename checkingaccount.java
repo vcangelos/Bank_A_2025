@@ -61,7 +61,7 @@ class CheckingAccount {
         if (!file.exists()) return accountNumbers;
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
-            br.readLine(); // Skip header
+            br.readLine(); 
             while ((line = br.readLine()) != null) {
                 String[] data = line.split(",");
                 if (data.length >= 2) {
@@ -218,26 +218,32 @@ public class CheckingAccountApp {
 
     public static void main(String[] args) {
         Scanner scan = new Scanner(System.in);
-        String userID = "0"; // uniqueID is set to 0
-
-        System.out.println("Welcome to the Checking Account Menu!");
+        String userID = "0";
         CheckingAccount checking = null;
 
-        while (true) {
-            System.out.println("Do you want to [1] Create a new account or [2] Access an existing account? Enter 1 or 2: ");
-            int choice = getValidInput(scan, 1, 2);
-
-            if (choice == 1) {
-                checking = createNewAccount(scan);
-                break;
-            } else {
-                checking = accessExistingAccount(scan, userID);
-                if (checking != null) {
+        try (BufferedReader br = new BufferedReader(new FileReader(CSV_FILE))) {
+            String line;
+            br.readLine(); // skip header
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(",");
+                if (data.length < 8) continue;
+                if (data[0].equals(userID)) {
+                    String accNumber = data[1];
+                    String name = data[2];
+                    double balance = Double.parseDouble(data[3]);
+                    boolean overdraftProtection = Boolean.parseBoolean(data[4]);
+                    double overdraftLimit = Double.parseDouble(data[5]);
+                    SimpleDateFormat formatter = new SimpleDateFormat("E MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
+                    Date dateOpened = formatter.parse(data[6]);
+                    Date lastTransactionDate = formatter.parse(data[7]);
+                    checking = new CheckingAccount(userID, accNumber, name, balance, overdraftProtection, overdraftLimit, dateOpened, lastTransactionDate);
+                    System.out.println("Account loaded successfully.");
                     break;
-                } else {
-                    System.out.println("Returning to main menu...");
                 }
             }
+        } catch (IOException | ParseException e) {
+            System.out.println("No existing account found. Creating a new one...");
+            checking = createNewAccount(scan);
         }
 
         boolean running = true;
@@ -295,48 +301,7 @@ public class CheckingAccountApp {
                 System.out.println("Invalid input. Please enter 'true' or 'false'.");
             }
         }
-        return new CheckingAccount("0", name, 0.00, overdraftProtection, linkedSavingsAccount, overdraftLimit); // uniqueID set to 0
-    }
-
-    private static CheckingAccount accessExistingAccount(Scanner scan, String userID) {
-        while (true) {
-            System.out.print("Enter your account number (or type 'back' to return): ");
-            String input = scan.next();
-
-            if (input.equalsIgnoreCase("back")) {
-                return null;
-            }
-
-            try (BufferedReader br = new BufferedReader(new FileReader(CSV_FILE))) {
-                String line;
-                while ((line = br.readLine()) != null) {
-                    String[] data = line.split(",");
-                    if (data.length < 8) continue;
-                    if (data[0].equals(userID) && data[1].equals(input)) {
-                        String uniqueID = data[0];
-                        String name = data[2];
-                        double balance = Double.parseDouble(data[3]);
-                        boolean overdraftProtection = Boolean.parseBoolean(data[4]);
-                        double overdraftLimit = Double.parseDouble(data[5]);
-                        try {
-                            SimpleDateFormat formatter = new SimpleDateFormat("E MMM dd HH:mm:ss z yyyy", Locale.ENGLISH);
-                            Date dateOpened = formatter.parse(data[6]);
-                            Date lastTransactionDate = formatter.parse(data[7]);
-                            CheckingAccount existing = new CheckingAccount(uniqueID, input, name, balance, overdraftProtection, overdraftLimit, dateOpened, lastTransactionDate);
-                            System.out.println("Account found. Logging in...");
-                            return existing;
-                        } catch (ParseException e) {
-                            System.out.println("Error parsing date: " + e.getMessage());
-                        }
-                    }
-                }
-            } catch (IOException e) {
-                System.out.println("Error reading account file: " + e.getMessage());
-                return null;
-            }
-
-            System.out.println("Account not found or user ID does not match. Please try again or type 'back' to return.");
-        }
+        return new CheckingAccount("0", name, 0.00, overdraftProtection, linkedSavingsAccount, overdraftLimit);
     }
 
     private static void displayAccountInfo(CheckingAccount checking) {
