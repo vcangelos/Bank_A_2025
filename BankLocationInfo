@@ -1,0 +1,76 @@
+//
+// Source code recreated from a .class file by IntelliJ IDEA
+// (powered by FernFlower decompiler)
+//
+
+import java.util.Scanner;
+
+public class Main {
+    public Main() {
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Choose from one of the banks below: ");
+        System.out.println("Bank of Old Bridge: 1");
+        System.out.println("Bank of Dallas: 2");
+        System.out.println("Bank of Los Angeles: 3");
+        System.out.println("Bank of Detroit: 4");
+        System.out.println("Bank of Denver: 5");
+        int choice = scanner.nextInt();
+        if (choice == 1) {
+            System.out.println("You chose Bank of Old Bridge");
+            Bank bank = new Bank("Franchise Bank", 7325551943L, "support@bankofoldbridge.com", 832954724);
+            System.out.println("Bank Branch: " + bank.getBankType());
+            System.out.println("Bank Number: " + bank.getBankNumber());
+            System.out.println("Bank Email: " + bank.getBankEmail());
+            System.out.println("Bank Routing: " + bank.getBankRouting());
+        } else if (choice == 2) {
+            System.out.println("You chose Bank of Dallas");
+            Bank bank2 = new Bank("Franchise Bank", 2145558273L, "support@bankofdallas.com", 723297259);
+            System.out.println(bank2);
+        } else if (choice == 3) {
+            System.out.println("You chose Bank of Los Angeles");
+            Bank bank3 = new Bank("Franchise Bank", 3235554921L, "support@bankoflosangeles.com", 563934953);
+            System.out.println(bank3);
+        } else if (choice == 4) {
+            System.out.println("You chose Bank of Detroit");
+            Bank bank4 = new Bank("Franchise Bank", 3135557610L, "support@bankofdetroit.com", 384239475);
+            System.out.println(bank4);
+        } else if (choice == 5) {
+            System.out.println("You chose Bank of Denver");
+            Bank bank5 = new Bank("Franchise Bank", 7205553486L, "support@bankofdenver.com", 274539242);
+            System.out.println(bank5);
+        } else {
+            System.out.println("Invalid Choice");
+        }
+
+    }
+}
+
+class Bank {
+    private String bankType;
+    private long bankNumber;
+    private String bankEmail;
+    private int bankRouting;
+
+    public Bank(String bankType, long bankNumber, String bankEmail, int bankRouting) {
+        this.bankType = bankType;
+        this.bankNumber = bankNumber;
+        this.bankEmail = bankEmail;
+        this.bankRouting = bankRouting;
+    }
+
+    public String getBankType() { return bankType; }
+    public long getBankNumber() { return bankNumber; }
+    public String getBankEmail() { return bankEmail; }
+    public int getBankRouting() { return bankRouting; }
+
+    @Override
+    public String toString() {
+        return "Bank Type: " + bankType +
+                "\nBank Number: " + bankNumber +
+                "\nBank Email: " + bankEmail +
+                "\nBank Routing: " + bankRouting;
+    }
+}
