@@ -480,7 +480,7 @@ public class SafetyDepositBox {
 
 
 
-//fix so a person cant create a box after they already created a box
+//when using 4 to change box size, it needs to update size, dimension, cost
 //connect data from souren's csv to connect user data with their uniqueIds
 //ignoreCaps on input
 
@@ -523,8 +523,16 @@ public class SafetyDepositBox {
             System.out.println("2. Login as an authorized user");
             System.out.println("3. Exit");
             System.out.print("Choose an option: ");
-            int choice = scanner.nextInt();
-            scanner.nextLine();
+            int choice = -1;
+            try {
+                choice = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a number.");
+                continue;
+            }
+
+            
+            
 
             if (choice == 1) {
                 String uniqueId = login(scanner);
@@ -626,7 +634,7 @@ public class SafetyDepositBox {
 
     private static void loadBoxesFromCSV() {
         try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
-            String headerLine = reader.readLine(); // Read the header line
+            
             
             String line;
             while ((line = reader.readLine()) != null) {
@@ -664,9 +672,10 @@ public class SafetyDepositBox {
             System.out.println("\n1. Create Box");
             System.out.println("2. Modify Box Contents");
             System.out.println("3. View Box Details");
-            System.out.println("4. Grant Access to Other User");
-            System.out.println("5. View Authorized Users");
-            System.out.println("6. Logout");
+            System.out.println("4. Change Box size");
+            System.out.println("5. Grant Access to Other User");
+            System.out.println("6. View Authorized Users");
+            System.out.println("7. Logout");
             System.out.print("Choose an option: ");
             int choice = scanner.nextInt();
             scanner.nextLine();
@@ -678,11 +687,13 @@ public class SafetyDepositBox {
             } else if (choice == 3) {
                 viewBoxDetails(uniqueId);
             } else if (choice == 4) {
-                grantAccessToUser(scanner, uniqueId);
+            	 changeBoxSize(scanner, uniqueId);
             } else if (choice == 5) {
+                grantAccessToUser(scanner, uniqueId);
+            } else if (choice == 6) {
                 viewAuthorizedUsers(uniqueId);
 
-            } else if (choice == 6) {
+            } else if (choice == 7) {
                 System.out.println("Logged out.");
                 break;
             } else {
@@ -699,6 +710,55 @@ public class SafetyDepositBox {
         }
         return false;
     }
+    private static void changeBoxSize(Scanner scanner, String uniqueId) {
+        System.out.println("\n=== Change Box Size ===");
+
+        // Find current box
+        String oldBoxKey = null;
+        for (String key : boxes.keySet()) {
+            if (key.startsWith(uniqueId)) {
+                oldBoxKey = key;
+                break;
+            }
+        }
+
+        if (oldBoxKey == null) {
+            System.out.println("No box found for this user.");
+            return;
+        }
+
+        BoxDetails currentBox = boxes.get(oldBoxKey);
+
+        System.out.println("Current size: " + currentBox.getSize());
+        System.out.println("Available sizes:");
+        for (String size : BOX_SIZES.keySet()) {
+            System.out.println("- " + size);
+        }
+
+        System.out.print("Enter new box size: ");
+        String newSize = scanner.nextLine();
+
+        if (!BOX_SIZES.containsKey(newSize)) {
+            System.out.println("Invalid size.");
+            return;
+        }
+
+        BoxDetails newTemplate = BOX_SIZES.get(newSize);
+        currentBox.setSize(newSize);
+        currentBox.setDimensions(newTemplate.getDimensions());
+        currentBox.setCost(newTemplate.getCost());
+
+        String newBoxKey = uniqueId + "_" + newSize;
+
+        boxes.remove(oldBoxKey);
+        boxes.put(newBoxKey, currentBox);
+
+        saveBoxesToCSV(newBoxKey, "Modified");
+
+        System.out.println("Box size updated successfully!");
+    }
+
+
 
     private static void viewBoxDetails(String uniqueId) {
     	// Look for a box associated with the uniqueId
@@ -718,6 +778,13 @@ public class SafetyDepositBox {
     }
 
     private static void createBox(Scanner scanner, String uniqueId) {
+    	
+    	for (String key : boxes.keySet()) {
+    	    if (key.startsWith(uniqueId + "_")) {
+    	        System.out.println("You already have a box. Cannot create another one.");
+    	        return;
+    	    }
+    	}
     	  System.out.println("\n=== Create Box ===");
 
     	    System.out.println("Available box sizes:");
@@ -1090,7 +1157,22 @@ private static void authorizedUserMenu(String uniqueId, String permission) {
             this(size, dimensions, cost, "", 0.0);
         }
 
-        public BoxDetails(String size, String dimensions, double cost, String contents, double totalValue) {
+        public void setSize(String newSize) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void setCost(double cost2) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public void setDimensions(String dimensions2) {
+			// TODO Auto-generated method stub
+			
+		}
+
+		public BoxDetails(String size, String dimensions, double cost, String contents, double totalValue) {
             this.size = size;
             this.dimensions = dimensions;
             this.cost = cost;
@@ -1106,4 +1188,3 @@ private static void authorizedUserMenu(String uniqueId, String permission) {
         public void setTotalValue(double totalValue) { this.totalValue = totalValue; }
     }
 }
-
