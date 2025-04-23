@@ -3,6 +3,30 @@ import java.util.*;
 import java.io.*;
 
 class CDWelcomeScreen {
+    public static boolean checkUserExists(int uniqueID) throws FileNotFoundException {
+        File file = new File("src/CD.csv");
+        if (!file.exists()) return false;
+
+        Scanner scanner = new Scanner(file);
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine().trim();
+            if (line.isEmpty()) continue;
+
+            String[] fields = line.split(",");
+            try {
+                int id = Integer.parseInt(fields[0].trim());
+                if (id == uniqueID) {
+                    scanner.close();
+                    return true;
+                }
+            } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
+                // Skip malformed lines
+            }
+        }
+        scanner.close();
+        return false;
+    }
+
     public static void main(String[] args) throws FileNotFoundException {
 
         Scanner userinput = new Scanner(System.in);
@@ -82,7 +106,7 @@ class CDWelcomeScreen {
         } else {
             System.out.println("Invalid input. Please respond with 'yes' or 'no'.");
         }
-        
+
 
 
     }
