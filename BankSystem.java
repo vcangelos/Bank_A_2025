@@ -25,7 +25,7 @@ public class BankSystem {
         }
     }
 
-    // ─────────────────── view existing account info ─────────────────────
+    //view existing account info
     private static void viewAccountInfo(Scanner sc) {
         System.out.print("Enter account holder's name: ");
         String holderName = sc.nextLine();
@@ -54,7 +54,7 @@ public class BankSystem {
         waitForBack(sc);
     }
 
-    // ─────────────────── account creation ──────────────────────────────
+    //account creation
     private static void createNewAccount(Scanner sc) {
         System.out.println("Provide the following information to create a new account:");
         System.out.print("Account holder name: ");
@@ -79,7 +79,7 @@ public class BankSystem {
         waitForBack(sc);
     }
 
-    // ─────────────────── close account ─────────────────────────────────
+    // close account 
     private static void closeAccount(Scanner sc) {
         System.out.print("Enter account holder's name: ");
         String holderName = sc.nextLine();
@@ -113,7 +113,7 @@ public class BankSystem {
         waitForBack(sc);
     }
 
-    // ─────────────────── CSV helpers ────────────────────────────────
+    //  CSV helpers 
     private static void writeAccountInfoToCSV(int id, String accountNumber, String holderName,
                                                double balance, boolean overdraftProtection, double overdraftLimit,
                                                String dateOpened, String lastTransactionDate, String pin) {
@@ -136,7 +136,7 @@ public class BankSystem {
         return max + 1;
     }
 
-    // ─────────────────── utilities ──────────────────────────────────
+    //  utilities 
     private static void waitForBack(Scanner sc) {
         System.out.println("\nType 'back' to return to the main menu.");
         while (!sc.nextLine().trim().equalsIgnoreCase("back"))
