@@ -19,7 +19,7 @@ class CheckingAccount {
     private Date lastTransactionDate;
     private String routingNumber;
 
-    private static final String CSV_FILE = "checkingaccount.csv";
+    private static final String CSV_FILE = "savingsaccount.csv";
 
     public CheckingAccount(String uniqueID, String accountHolderName, double balance, boolean isOverdraftProtectionEnabled, SavingsAccount linkedSavingsAccount, double overdraftLimit, String routingNumber) {
         this.uniqueID = uniqueID;
