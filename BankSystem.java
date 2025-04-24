@@ -46,7 +46,8 @@ public class BankSystem {
                         found = true;
                         System.out.println("\nAccount Holder: " + f[2]);
                         System.out.println("Account Number: " + f[1]);
-                        System.out.println("Balance: " + f[3]);
+                        // Format the balance to two decimal places
+                        System.out.println("Balance: " + String.format("%.2f", Double.parseDouble(f[3])));
                         System.out.println("PIN: " + f[8]);
                         break;
                     } else {
