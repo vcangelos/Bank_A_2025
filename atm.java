@@ -3,177 +3,238 @@ package bank;
 import java.io.*;
 import java.util.*;
 
-public class ATMSystem {
+public class ATM {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+        ensureFile("account_info.csv");
 
-        // Ensure the CSV file exists
-        File csvFile = new File("card_info.csv");
+// sign in or exit
+        while (true) {
+            System.out.println("Welcome to the ATM system.");
+            System.out.println("1. Sign In");
+            String option = scanner.nextLine().trim();
 
-        if (!csvFile.exists()) {
-            try {
-                csvFile.createNewFile();
-            } catch (IOException e) {
-                System.out.println("Error creating the CSV file: " + e.getMessage());
+            switch (option) {
+                case "1" -> signIn(scanner);  // Calls the sign-in method
+                default -> System.out.println("Invalid option. Please try again.");
+            }
+        }
+    }
+
+// Sign in - name and pin
+    private static void signIn(Scanner sc) {
+        System.out.print("Enter account holder's name: ");
+        String holderName = sc.nextLine().trim();
+
+        System.out.print("Enter your 4-digit PIN: ");
+        String enteredPin = sc.nextLine().trim();
+
+        // Authenticate the user and proceed if valid
+        if (authenticate(holderName, enteredPin)) {
+            System.out.println("Sign in successful!");
+            handleAccountActions(sc, holderName);  // Handles account actions after successful sign-in
+        } else {
+            System.out.println("Invalid account or PIN. Please try again.");
+        }
+    }
+
+// check CSV for matching name and pin
+    private static boolean authenticate(String holderName, String enteredPin) {
+        try (Scanner csv = new Scanner(new File("account_info.csv"))) {
+            while (csv.hasNextLine()) {
+                String[] f = csv.nextLine().split(",");
+                if (f.length < 9) continue;
+                String accountHolder = f[2].trim();
+                String storedPin = f[8].trim();
+
+// Check if account name and pin match
+                if (accountHolder.equalsIgnoreCase(holderName) && storedPin.equals(enteredPin)) {
+                    return true;  // Authentication successful
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading CSV: " + e.getMessage());
+        }
+        return false;  // Authentication failed
+    }
+
+// view balance, deposit, withdraw
+    private static void handleAccountActions(Scanner sc, String holderName) {
+        while (true) {
+            System.out.println("\nChoose an option:");
+            System.out.println("1. View Balance");
+            System.out.println("2. Deposit Funds");
+            System.out.println("3. Withdraw Funds");
+            System.out.println("4. Back to Main Menu");
+            String option = sc.nextLine().trim();
+
+            switch (option) {
+                case "1" -> viewBalance(holderName);  // Show account balance
+                case "2" -> depositFunds(sc, holderName);  // Deposit funds
+                case "3" -> withdrawFunds(sc, holderName);  // Withdraw funds
+                case "4" -> {
+                    System.out.println("\nReturning to the main menu...");
+                    return;  // Exit to the main menu
+                }
+                default -> System.out.println("Invalid option. Please try again.");
+            }
+        }
+    }
+
+// View account balance
+    private static void viewBalance(String holderName) {
+        try (Scanner csv = new Scanner(new File("account_info.csv"))) {
+            while (csv.hasNextLine()) {
+                String[] f = csv.nextLine().split(",");
+                if (f.length < 9) continue;
+
+                String accountHolder = f[2].trim();
+                if (accountHolder.equalsIgnoreCase(holderName)) {
+                    double balance = Double.parseDouble(f[3].trim());
+                    System.out.printf("\nYour Balance: $%.2f\n", balance);  // Display balance with 2 decimal places
+                    return;
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading CSV: " + e.getMessage());
+        }
+        System.out.println("No matching account found.");
+    }
+
+// Deposit and conversion
+    private static void depositFunds(Scanner sc, String holderName) {
+        System.out.println("\nSelect currency for deposit:");
+        System.out.println("1. USD");
+        System.out.println("2. Euro (€)");
+        System.out.println("3. Peso (₱)");
+        System.out.println("4. Canadian Dollar (CAD$)");
+
+        String currencyOption = sc.nextLine().trim();
+        double exchangeRate = 1.0;  // Default to USD (1 USD = 1 USD)
+
+// exchange rate
+        switch (currencyOption) {
+            case "1" -> System.out.print("Enter amount in USD: ");
+            case "2" -> {
+                exchangeRate = 1.1;  // Example rate for Euro to USD
+                System.out.print("Enter amount in Euro (€): ");
+            }
+            case "3" -> {
+                exchangeRate = 0.018;  // Example rate for Peso to USD
+                System.out.print("Enter amount in Peso (₱): ");
+            }
+            case "4" -> {
+                exchangeRate = 0.74;  // Example rate for CAD to USD
+                System.out.print("Enter amount in Canadian Dollar (CAD$): ");
+            }
+            default -> {
+                System.out.println("Invalid currency option.");
                 return;
             }
         }
 
-        // Main loop for the ATM system
-        while (true) {
-            System.out.println("Welcome to the ATM.");
-            System.out.println("1. Login");
-            System.out.println("2. Exit");
+// Convert amount to USD and update balance
+        double amount = Double.parseDouble(sc.nextLine().trim());
+        double depositAmountInUSD = amount * exchangeRate;
 
-            String option = scanner.nextLine().trim();
+        updateBalance(holderName, depositAmountInUSD);  // Update the account balance
 
-            if (option.equals("1")) {
-                // User login
-                System.out.print("Enter your first name: ");
-                String firstName = scanner.nextLine();
-                System.out.print("Enter your last name: ");
-                String lastName = scanner.nextLine();
-                System.out.print("Enter your 4-digit Account PIN: ");
-                String enteredPin = scanner.nextLine();
+        System.out.printf("Successfully deposited $%.2f in USD.\n", depositAmountInUSD);
+    }
 
-                if (isValidUser(firstName, lastName, enteredPin)) {
-                    atmMenu(scanner, firstName, lastName);
-                } else {
-                    System.out.println("Invalid login credentials.");
+// Update balance after deposit-withdrawal
+    private static void updateBalance(String holderName, double amount) {
+        List<String> keep = new ArrayList<>();
+        boolean updated = false;
+
+        try (Scanner csv = new Scanner(new File("account_info.csv"))) {
+            while (csv.hasNextLine()) {
+                String line = csv.nextLine();
+                String[] f = line.split(",");
+                if (f.length < 9) continue;
+
+                String accountHolder = f[2].trim();
+                if (accountHolder.equalsIgnoreCase(holderName)) {
+                    double balance = Double.parseDouble(f[3].trim());
+                    balance += amount;  // Add deposit or subtract withdrawal
+                    f[3] = String.format("%.2f", balance);  // Update balance in the array
+                    updated = true;
                 }
-            } else if (option.equals("2")) {
-                break;  // Exit the ATM system
-            } else {
-                System.out.println("Invalid option. Try again.");
-            }
-        }
-    }
-
-    // Validate the user login using the CSV file
-    private static boolean isValidUser(String firstName, String lastName, String pin) {
-        try (Scanner csvScanner = new Scanner(new File("card_info.csv"))) {
-            while (csvScanner.hasNextLine()) {
-                String line = csvScanner.nextLine();
-                String[] cardInfo = line.split(",");
-                String storedFirstName = cardInfo[0];
-                String storedLastName = cardInfo[1];
-                String storedPin = cardInfo[6]; // Account PIN is at index 6
-
-                // Validate the user details
-                if (storedFirstName.equalsIgnoreCase(firstName) && storedLastName.equalsIgnoreCase(lastName)
-                        && storedPin.equals(pin)) {
-                    return true;
-                }
-            }
-        } catch (FileNotFoundException e) {
-            System.out.println("Error reading the CSV file.");
-        }
-        return false;
-    }
-
-    // ATM menu: Deposit, Withdraw, Balance Check, and Exit
-    private static void atmMenu(Scanner scanner, String firstName, String lastName) {
-        while (true) {
-            System.out.println("ATM Menu:");
-            System.out.println("1. Deposit");
-            System.out.println("2. Withdraw");
-            System.out.println("3. Check Balance");
-            System.out.println("4. Exit");
-
-            String choice = scanner.nextLine().trim();
-            if (choice.equals("1")) {
-                depositFunds(scanner, firstName, lastName);
-            } else if (choice.equals("2")) {
-                withdrawFunds(scanner, firstName, lastName);
-            } else if (choice.equals("3")) {
-                checkBalance(firstName, lastName);
-            } else if (choice.equals("4")) {
-                break;  // Exit ATM menu
-            } else {
-                System.out.println("Invalid choice. Try again.");
-            }
-        }
-    }
-
-    // Deposit funds into the user's account
-    private static void depositFunds(Scanner scanner, String firstName, String lastName) {
-        System.out.print("Enter amount to deposit: ");
-        double depositAmount = scanner.nextDouble();
-        updateBalance(firstName, lastName, depositAmount);
-        System.out.println("Deposit successful! Amount deposited: " + depositAmount);
-    }
-
-    // Withdraw funds from the user's account
-    private static void withdrawFunds(Scanner scanner, String firstName, String lastName) {
-        System.out.print("Enter amount to withdraw: ");
-        double withdrawAmount = scanner.nextDouble();
-        
-        // Check if the user has sufficient balance
-        double currentBalance = getBalance(firstName, lastName);
-        if (currentBalance >= withdrawAmount) {
-            updateBalance(firstName, lastName, -withdrawAmount);
-            System.out.println("Withdrawal successful! Amount withdrawn: " + withdrawAmount);
-        } else {
-            System.out.println("Insufficient funds!");
-        }
-    }
-
-    // Check the balance of the user's account
-    private static void checkBalance(String firstName, String lastName) {
-        double balance = getBalance(firstName, lastName);
-        System.out.println("Current Balance: " + balance);
-    }
-
-    // Get the balance from the CSV for the user
-    private static double getBalance(String firstName, String lastName) {
-        try (Scanner csvScanner = new Scanner(new File("card_info.csv"))) {
-            while (csvScanner.hasNextLine()) {
-                String line = csvScanner.nextLine();
-                String[] cardInfo = line.split(",");
-                String storedFirstName = cardInfo[0];
-                String storedLastName = cardInfo[1];
-                double balance = Double.parseDouble(cardInfo[7]);  // Balance is at index 7
-                
-                if (storedFirstName.equalsIgnoreCase(firstName) && storedLastName.equalsIgnoreCase(lastName)) {
-                    return balance;
-                }
-            }
-        } catch (FileNotFoundException e) {
-            System.out.println("Error reading the CSV file.");
-        }
-        return 0.0;  // Return 0 if no matching account is found
-    }
-
-    // Update the balance of a user's account in the CSV
-    private static void updateBalance(String firstName, String lastName, double amount) {
-        List<String> lines = new ArrayList<>();
-        try (Scanner csvScanner = new Scanner(new File("card_info.csv"))) {
-            while (csvScanner.hasNextLine()) {
-                String line = csvScanner.nextLine();
-                String[] cardInfo = line.split(",");
-                String storedFirstName = cardInfo[0];
-                String storedLastName = cardInfo[1];
-                double balance = Double.parseDouble(cardInfo[7]);
-
-                // If the user matches, update the balance
-                if (storedFirstName.equalsIgnoreCase(firstName) && storedLastName.equalsIgnoreCase(lastName)) {
-                    balance += amount;  // Add or subtract the amount
-                    cardInfo[7] = String.valueOf(balance);  // Update balance field
-                    line = String.join(",", cardInfo);  // Rebuild the line
-                }
-                lines.add(line);
-            }
-        } catch (FileNotFoundException e) {
-            System.out.println("Error reading the CSV file.");
-        }
-
-        // Write the updated lines back to the file
-        try (PrintWriter writer = new PrintWriter(new FileWriter("card_info.csv"))) {
-            for (String line : lines) {
-                writer.println(line);
+                keep.add(String.join(",", f));
             }
         } catch (IOException e) {
-            System.out.println("Error writing to the CSV file.");
+            System.out.println("Error reading CSV: " + e.getMessage());
+        }
+
+// Write updated balance back to the file
+        if (updated) {
+            try (PrintWriter writer = new PrintWriter(new FileWriter("account_info.csv"))) {
+                for (String line : keep) {
+                    writer.println(line);
+                }
+            } catch (IOException e) {
+                System.out.println("Error writing CSV: " + e.getMessage());
+            }
+        }
+    }
+
+// Withdraw funds
+    private static void withdrawFunds(Scanner sc, String holderName) {
+        System.out.print("Enter withdrawal amount in USD: ");
+        double amount = Double.parseDouble(sc.nextLine().trim());
+
+        try (Scanner csv = new Scanner(new File("account_info.csv"))) {
+            List<String> keep = new ArrayList<>();
+            boolean found = false;
+
+// Check balance is sufficient for withdrawal
+            while (csv.hasNextLine()) {
+                String line = csv.nextLine();
+                String[] f = line.split(",");
+                if (f.length < 9) continue;
+
+                String accountHolder = f[2].trim();
+                if (accountHolder.equalsIgnoreCase(holderName)) {
+                    double balance = Double.parseDouble(f[3].trim());
+
+// Ensure sufficient funds
+                    if (balance >= amount) {
+                        balance -= amount;
+                        f[3] = String.format("%.2f", balance);  // Update balance after withdrawal
+                        found = true;
+                    } else {
+                        System.out.println("Insufficient funds.");
+                    }
+                }
+                keep.add(String.join(",", f));
+            }
+
+// Write updated balance back to the file
+            if (found) {
+                try (PrintWriter writer = new PrintWriter(new FileWriter("account_info.csv"))) {
+                    for (String line : keep) {
+                        writer.println(line);
+                    }
+                } catch (IOException e) {
+                    System.out.println("Error writing CSV: " + e.getMessage());
+                }
+                System.out.printf("Successfully withdrawn $%.2f.\n", amount);
+            } else {
+                System.out.println("No matching account found.");
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading CSV: " + e.getMessage());
+        }
+    }
+
+// Ensure the account_info.csv file exists
+    private static void ensureFile(String name) {
+        try {
+            File f = new File(name);
+            if (!f.exists()) f.createNewFile();
+        } catch (IOException e) {
+            System.out.println("Cannot create " + name + ": " + e.getMessage());
+            System.exit(1);
         }
     }
 }
