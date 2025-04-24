@@ -7,15 +7,18 @@ public class BankSystem {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
+// Ensure that the account_info.csv file exists
         ensureFile("account_info.csv");
 
         while (true) {
+// menu options
             System.out.println("Choose an option:");
             System.out.println("1. View existing account info");
             System.out.println("2. Create a new account");
             System.out.println("3. Close an account");
             String option = scanner.nextLine().trim();
 
+// Handle choices with switch statement
             switch (option) {
                 case "1" -> viewAccountInfo(scanner);
                 case "2" -> createNewAccount(scanner);
@@ -25,7 +28,7 @@ public class BankSystem {
         }
     }
 
-    // View existing account info with PIN verification
+// view account info -needs name and PIN
     private static void viewAccountInfo(Scanner sc) {
         System.out.print("Enter account holder's name: ");
         String holderName = sc.nextLine().trim();
@@ -33,20 +36,24 @@ public class BankSystem {
         System.out.print("Enter your 4-digit PIN: ");
         String enteredPin = sc.nextLine().trim();
 
+// read CSV file containing account info
         try (Scanner csv = new Scanner(new File("account_info.csv"))) {
             boolean found = false;
+
             while (csv.hasNextLine()) {
                 String[] f = csv.nextLine().split(",");
-                if (f.length < 9) continue;
-                String accountHolder = f[2].trim();
-                String storedPin = f[8].trim();
 
+                if (f.length < 9) continue;
+
+                String accountHolder = f[2].trim();
+                String storedPin = f[8].trim(); 
+
+// If info matches, display account info
                 if (accountHolder.equalsIgnoreCase(holderName)) {
                     if (storedPin.equals(enteredPin)) {
                         found = true;
                         System.out.println("\nAccount Holder: " + f[2]);
                         System.out.println("Account Number: " + f[1]);
-                        // Format the balance to two decimal places
                         System.out.println("Balance: " + String.format("%.2f", Double.parseDouble(f[3])));
                         System.out.println("PIN: " + f[8]);
                         break;
@@ -56,66 +63,71 @@ public class BankSystem {
                     }
                 }
             }
+
+// If no matching account
             if (!found) {
                 System.out.println("No matching account found.");
             }
         } catch (IOException e) {
             System.out.println("Error reading CSV: " + e.getMessage());
         }
+
         waitForBack(sc);
     }
 
-    // Account creation with generated 16-digit number, CVV, expiry, and 4-digit non-security code
+// new account
     private static void createNewAccount(Scanner sc) {
         System.out.println("Provide the following information to create a new account:");
+        
+
         System.out.print("Account holder name: ");
         String holderName = sc.nextLine();
 
-        // Generate a 16-digit account number starting with 4
+
         String accountNumber = "4" + String.format("%015d", (long) (Math.random() * 1_000_000_000_000_000L));
 
         double balance = 0.0;
         boolean overdraftProtection = false;
-        double overdraftLimit = 0.0;
+        double overdraftLimit = 0.0; 
         String dateOpened = java.time.LocalDate.now().toString();
         String lastTransactionDate = "None";
 
-        // Generate 3 random values for the card details
-        String cvv = String.format("%03d", (int) (Math.random() * 1000));  // CVV 3 digits
-        String expiryDate = java.time.LocalDate.now().plusYears(5).format(java.time.format.DateTimeFormatter.ofPattern("MM/yy"));  // Expiry in MM/yy format
-        String fourDigitCode = String.format("%04d", (int) (Math.random() * 10000));  // 4-digit code
 
-        // Set Security PIN
+        String cvv = String.format("%03d", (int) (Math.random() * 1000));
+        String expiryDate = java.time.LocalDate.now().plusYears(5).format(java.time.format.DateTimeFormatter.ofPattern("MM/yy"));
+        String fourDigitCode = String.format("%04d", (int) (Math.random() * 10000));
+
+// user set pin
         System.out.print("Set your 4-digit Account Security PIN: ");
         String pin = sc.nextLine();
 
-        // Only write the data to the CSV
-        int id = nextUniqueID();
+ // Write new account to CSV
+        int id = nextUniqueID();  
         writeAccountInfoToCSV(id, accountNumber, holderName, balance, overdraftProtection, overdraftLimit, dateOpened, lastTransactionDate, pin);
 
-        // Display the card details for the user
-        System.out.println("\nCard details (not saved, displayed for this session only):");
+        // Display the newly created account's card details
+        System.out.println("\nYour new card details:");
         System.out.println("Account Number: " + accountNumber);
         System.out.println("CVV: " + cvv);
         System.out.println("Expiry Date: " + expiryDate);
-        System.out.println("4-digit Code: " + fourDigitCode);
+        System.out.println("4-Digit Code: " + fourDigitCode);
 
-        System.out.println("Account created and saved to account_info.csv.");
 
         waitForBack(sc);
     }
-
-    // Close account with PIN verification
+    
+// close account
     private static void closeAccount(Scanner sc) {
+        // Prompt for account holder's name and PIN
         System.out.print("Enter account holder's name: ");
         String holderName = sc.nextLine().trim();
-
         System.out.print("Enter your 4-digit PIN: ");
         String enteredPin = sc.nextLine().trim();
 
         List<String> keep = new ArrayList<>();
         boolean removed = false;
 
+// Read CSV and removes value
         try (Scanner csv = new Scanner(new File("account_info.csv"))) {
             while (csv.hasNextLine()) {
                 String line = csv.nextLine();
@@ -125,6 +137,7 @@ public class BankSystem {
                 String accountHolder = f[2].trim();
                 String storedPin = f[8].trim();
 
+// If info matches mark for removal
                 if (accountHolder.equalsIgnoreCase(holderName) && storedPin.equals(enteredPin)) {
                     removed = true;
                 } else {
@@ -135,6 +148,7 @@ public class BankSystem {
             System.out.println("Error reading CSV: " + e.getMessage());
         }
 
+// If account was found and removed
         if (!removed) {
             System.out.println("No matching account found or incorrect PIN.");
         } else {
@@ -145,14 +159,17 @@ public class BankSystem {
             }
             System.out.println("Account closed successfully.");
         }
+
+
         waitForBack(sc);
     }
 
-    // CSV helpers
-    private static void writeAccountInfoToCSV(int id, String accountNumber, String holderName,
-                                               double balance, boolean overdraftProtection, double overdraftLimit,
-                                               String dateOpened, String lastTransactionDate, String pin) {
+//write the new account info to CSV
+    private static void writeAccountInfoToCSV(int id, String accountNumber, String holderName, double balance, 
+                                               boolean overdraftProtection, double overdraftLimit, String dateOpened, 
+                                               String lastTransactionDate, String pin) {
         try (PrintWriter w = new PrintWriter(new FileWriter("account_info.csv", true))) {
+// Write account data in CSV format
             w.println(id + "," + accountNumber + "," + holderName + "," + balance + "," +
                       overdraftProtection + "," + overdraftLimit + "," + dateOpened + "," + lastTransactionDate + "," + pin);
         } catch (IOException e) {
@@ -160,31 +177,32 @@ public class BankSystem {
         }
     }
 
+
     private static int nextUniqueID() {
-        int max = 1000;
+        int max = 1000;  
         try (Scanner csv = new Scanner(new File("account_info.csv"))) {
             while (csv.hasNextLine()) {
                 String[] f = csv.nextLine().split(",");
                 if (f.length >= 1) max = Math.max(max, Integer.parseInt(f[0]));
             }
         } catch (IOException ignored) { }
-        return max + 1;
+        return max + 1;  // Return the next unique ID
     }
 
-    // Utilities
+// "back" to return to main menu
     private static void waitForBack(Scanner sc) {
         System.out.println("\nType 'back' to return to the main menu.");
         while (!sc.nextLine().trim().equalsIgnoreCase("back"))
             System.out.print("Type 'back': ");
     }
 
+// Ensure that the account_info.csv file exists
     private static void ensureFile(String name) {
         try {
             File f = new File(name);
-            if (!f.exists()) f.createNewFile();
+            if (!f.exists()) f.createNewFile();  
         } catch (IOException e) {
-            System.out.println("Cannot create " + name + ": " + e.getMessage());
-            System.exit(1);
+            System.out.println("Error ensuring file existence: " + e.getMessage());
         }
     }
 }
