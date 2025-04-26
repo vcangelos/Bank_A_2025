@@ -1,4 +1,3 @@
-
 import java.io.*;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -29,42 +28,7 @@ public class SafetyDepositBox {
         userInfoMap.put("654321", new String[]{"Jane", "Doe", "01011990", "987654321", "abc"});
     }
 
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-
-        while (true) {
-            System.out.println("\n=== Safety Deposit Box System ===");
-            System.out.println("1. Login");
-            System.out.println("2. Login as an authorized user");
-            System.out.println("3. Exit");
-            System.out.print("Choose an option: ");
-            int choice = -1;
-            try {
-                choice = Integer.parseInt(scanner.nextLine());
-            } catch (NumberFormatException e) {
-                System.out.println("Invalid input. Please enter a number.");
-                continue;
-            }
-
-            
-            
-
-            if (choice == 1) {
-                String uniqueId = login(scanner);
-                if (uniqueId != null) {
-                    ownerMenu(scanner, uniqueId);
-                }
-            } else if (choice == 2) {
-                loginAsAuthorizedUser(scanner);
-            } else if (choice == 3) {
-                System.out.println("Exiting system.");
-                break;
-            } else {
-                System.out.println("Invalid choice. Try again.");
-            }
-        }
-        scanner.close();
-    }
+    
     private static boolean isValidDate(String dateStr) {
         if (dateStr == null || dateStr.length() != 8) {
             return false;
@@ -78,7 +42,7 @@ public class SafetyDepositBox {
         }
     }
 
-    private static String login(Scanner scanner) {
+    static String login(Scanner scanner) {
         System.out.println("=== Login ===");
 
         System.out.print("Enter your First Name: ");
@@ -176,7 +140,7 @@ public class SafetyDepositBox {
         }
     }
 
-    private static void ownerMenu(Scanner scanner, String uniqueId) {
+    static void ownerMenu(Scanner scanner, String uniqueId) {
         System.out.println("\n=== Owner Menu ===");
         if (hasExistingBox(uniqueId)) {
             System.out.println("Your deposit box:");
@@ -430,7 +394,7 @@ public class SafetyDepositBox {
         }
 
         if (userBoxKey == null) {
-            System.out.println("You don’t have a box to modify.");
+            System.out.println("You donâ€™t have a box to modify.");
             return;
         }
 
@@ -566,7 +530,7 @@ public class SafetyDepositBox {
     }
 
 
-    private static void loginAsAuthorizedUser(Scanner scanner) {
+    static void loginAsAuthorizedUser(Scanner scanner) {
         System.out.println("=== Authorized User Login ===");
         System.out.print("Enter authorized username: ");
         String username = scanner.nextLine();
@@ -661,5 +625,45 @@ private static void authorizedUserMenu(String uniqueId, String permission) {
         public double getTotalValue() { return totalValue; }
         public void setContents(String contents) { this.contents = contents; }
         public void setTotalValue(double totalValue) { this.totalValue = totalValue; }
+    }
+}
+
+
+
+
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.println("\n=== Safety Deposit Box System ===");
+            System.out.println("1. Login");
+            System.out.println("2. Login as an authorized user");
+            System.out.println("3. Exit");
+            System.out.print("Choose an option: ");
+            int choice = -1;
+            try {
+                choice = Integer.parseInt(scanner.nextLine());
+            } catch (NumberFormatException e) {
+                System.out.println("Invalid input. Please enter a number.");
+                continue;
+            }
+
+            if (choice == 1) {
+                String uniqueId = SafetyDepositBox.login(scanner);
+                if (uniqueId != null) {
+                    SafetyDepositBox.ownerMenu(scanner, uniqueId);
+                }
+            } else if (choice == 2) {
+                SafetyDepositBox.loginAsAuthorizedUser (scanner);
+            } else if (choice == 3) {
+                System.out.println("Exiting system.");
+                break;
+            } else {
+                System.out.println("Invalid choice. Try again.");
+            }
+        }
+        scanner.close();
     }
 }
