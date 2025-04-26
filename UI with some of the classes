@@ -1,0 +1,2042 @@
+import java.io.*;
+import java.util.*;
+import java.util.Random; // for unique ID
+import java.util.Scanner; //to read the CSV file
+import java.util.ArrayList;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Date;
+import java.util.stream.Collectors;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.io.File;
+import java.io.FileWriter;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.time.LocalDate;
+import java.util.concurrent.ThreadLocalRandom;
+
+//https://www.youtube.com/watch?v=-95U3CZPlE8 referenced for reading the CSV FILE
+
+//https://www.youtube.com/watch?v=TpyRKom0X_s to edit certain parts of CSV TO DO!
+
+//TO DO let user change user options
+
+public class FinishedSprint1 {
+    public static void main(String[] args) throws FileNotFoundException {
+         Scanner inputScanner = new Scanner(System.in);
+        int rerun = -3;
+        String username="";
+        String password="";
+        String firstname="";
+        String lastname="";
+        String email="";
+        String SSNinput="";
+        int ID=0;
+        String uniqID="";
+        String DOB;
+        double minimumdeposit = 0;
+        long phonenum=0;
+        UserData user=new UserData();
+
+        while (rerun != -1) { // so user can return to welcome page
+            Boolean valid = false;
+            while (!valid) { // User must have valid response so he doesnt glitch the code
+                System.out.println("Welcome! Would you like to sign in or sign up?");
+                String signinorsignup = inputScanner.nextLine().toLowerCase().replace(" ", ""); // replaces spaces, e.g., "Sign in" becomes "Signin" (edge-casing)
+
+                if (signinorsignup.equalsIgnoreCase("Signup")) {
+                    System.out.print("Welcome to the bank! Please type in your a Username of your choice: ");
+                     username = inputScanner.nextLine();
+                    String usernameexists = existinguser(username);
+
+                    while (username == null || username.isEmpty() || usernameexists.equals("already exists")) { // isEmpty so it doesn’t edge-case and return a value
+                        if (usernameexists.equals("already exists")) {
+                            System.out.print("This username is already taken. Please enter a different Username: ");
+                        } else {
+                            System.out.print("Username cannot be empty. Please enter your Username: ");
+                        }
+                        username = inputScanner.nextLine();
+                        usernameexists = existinguser(username);
+                    }
+
+                    System.out.print("Hello " + username + ", please create your Password: ");
+                     password = inputScanner.nextLine();
+                    while (password == null || password.isEmpty()) {
+                        System.out.print("Password cannot be empty. Please create your Password: ");
+                        password = inputScanner.nextLine();
+                    }
+
+                    System.out.print(username + ", please enter your First Name: ");
+                     firstname = inputScanner.nextLine();
+                    while (firstname == null || firstname.isEmpty()) {
+                        System.out.print("First Name cannot be empty. Please enter your First Name: ");
+                        firstname = inputScanner.nextLine();
+                    }
+
+                    System.out.print(username + ", please enter your Last Name: ");
+                     lastname = inputScanner.nextLine();
+                    while (lastname == null || lastname.isEmpty()) {
+                        System.out.print("Last Name cannot be empty. Please enter your Last Name: ");
+                        lastname = inputScanner.nextLine();
+                    }
+
+                    System.out.print("Enter your Social Security number (9 digits, no dashes): ");
+                     SSNinput = inputScanner.nextLine();
+
+                    // Ensure the SSN is exactly 9 digits and contains only numbers
+                    while (SSNinput == null || !SSNinput.matches("\\d{9}") || SSNinput.isEmpty()) {
+                        System.out.print("Invalid SSN. Please enter exactly 9 digits, no dashes: ");
+                        SSNinput = inputScanner.nextLine();
+                    }
+
+                    int SSN = Integer.parseInt(SSNinput);
+
+                    System.out.print("Enter your DOB (MMDDYYYY, no slashes): ");
+                     DOB = inputScanner.nextLine();
+                    while (DOB == null || DOB.isEmpty() || !DOB.matches("\\d{8}")) {
+                        System.out.print("Invalid Date of Birth. Please enter exactly 8 digits, no slashes: ");
+                        DOB = inputScanner.nextLine();
+                    }
+
+                    System.out.print("Enter your email: ");
+                     email = inputScanner.nextLine();
+                    while (email == null || !email.contains("@") || email.isEmpty()) {
+                        System.out.print("Invalid email. Please enter a valid email with '@': ");
+                        email = inputScanner.nextLine();
+                    }
+
+                    System.out.print("Enter your phone number: ");
+                    String phone = inputScanner.nextLine();
+                    while (phone == null || phone.isEmpty() || !phone.matches("\\d{10}")) {
+                        System.out.print("Invalid phone number. Please enter a valid phone number with 10 digits: ");
+                        phone = inputScanner.nextLine();
+                    }
+                     phonenum = Long.parseLong(phone);
+
+                    System.out.println("Choose from one of the banks below to set as your default bank: ");
+                    System.out.println("1. Bank of Old Bridge");
+                    System.out.println("2. Bank of Dallas");
+                    System.out.println("3. Bank of Los Angeles");
+                    System.out.println("4. Bank of Detroit");
+                    System.out.println("5. Bank of Denver");
+                    String bankchoice = inputScanner.nextLine();
+                    while (bankchoice == null || bankchoice.isEmpty() || !bankchoice.matches("\\d{1}")) {
+                        System.out.print("Please choose a valid number to set as your default bank:");
+                        System.out.println("1. Bank of Old Bridge");
+                        System.out.println("2. Bank of Dallas");
+                        System.out.println("3. Bank of Los Angeles");
+                        System.out.println("4. Bank of Detroit");
+                        System.out.println("5. Bank of Denver");
+                        bankchoice = inputScanner.nextLine();
+
+                    }
+                    String choiceOfBank="";
+                    if (bankchoice.equals("1")){
+                         choiceOfBank="Bank of Old Bridge";
+                    }else if (bankchoice.equals("2")){
+                         choiceOfBank="Bank of Dallas";
+                    }else if (bankchoice.equals("3")){
+                         choiceOfBank="Bank of Los Angeles";
+                    }else if (bankchoice.equals("4")){
+                         choiceOfBank="Bank of Detroit";
+                    }else if (bankchoice.equals("5")){
+                         choiceOfBank="Bank of Denver";
+                    }
+
+
+
+                     minimumdeposit = 0;
+                    double validminimumdepositvalue = 25;
+                    while (minimumdeposit < validminimumdepositvalue) {
+                        System.out.print("Enter your minimum deposit (must be at least $25): ");
+                        String depositInput = inputScanner.nextLine();
+
+                        // Check if the input is blank
+                        if (depositInput.isEmpty()) {
+                            System.out.println("Deposit cannot be blank. Please enter a valid amount.");
+                        } else {
+                            // Check if the input can be parsed as a valid number and meets the minimum deposit
+                            if (depositInput.matches("\\d+(\\.\\d+)?")) { // checks if it's a valid number
+                                minimumdeposit = Double.parseDouble(depositInput);
+                                if (minimumdeposit < validminimumdepositvalue) {
+                                    System.out.println("Deposit must be at least $25. Please try again.");
+                                }
+                            } else {
+                                System.out.println("Invalid input. Please enter a valid numeric value.");
+                            }
+                        }
+                    }
+                     ID = genid();
+                     uniqID = String.valueOf(ID);
+                     user.setUsername(username);
+                     user.setPassword(password);
+                     user.setFirstname(firstname);
+                     user.setLastname(lastname);
+                     user.setEmail(email);
+                     user.setSsn(SSN);
+                     user.setPhone(phonenum);
+                     user.setMinimumdeposit(minimumdeposit);
+                     user.setDob(DOB);
+                     user.setID(ID);
+
+                    addUser(username, password, firstname, lastname, SSN, DOB, email, phonenum, minimumdeposit,choiceOfBank, ID);
+
+                    //USER CHOICE GOES HERE
+                    valid = true;
+
+
+                } else if (signinorsignup.equalsIgnoreCase("SignIn")) { // STILL IN WORK GOTTA DO CSV FILE FIRST
+                    System.out.print("Welcome To the bank Please enter your Username: ");
+                     username = inputScanner.nextLine();
+
+                    // Assuming users() is a method that retrieves user data based on the username
+                     user = users(username);
+
+                    // While loop to check if the username is found and keeps going so you cant break it
+                    while (user == null) {
+                        System.out.print("Your username was not found. Please enter your Username: ");
+                        username = inputScanner.nextLine();
+                        user = users(username);
+                    }
+
+                    System.out.print("Hello " + username + ", Please enter your Password: ");
+                     password = inputScanner.nextLine();
+                    String truePassword = user.getPassword();
+
+                    // Remove spaces from entered password
+                    String forgotpassword = password;
+                    forgotpassword = forgotpassword.replace(" ", "");
+
+                    int passwordmatch = -1;
+                    while (passwordmatch < 0) {
+                        if (truePassword.equals(password)) {
+                            // Password matches, welcome the user
+                            System.out.println("Welcome To the bank, " + user.getFirstname() + "!");
+                            passwordmatch = 1; // Exit the loop
+                        } else if (forgotpassword.equalsIgnoreCase("forgotpassword")) {
+                            // User forgot password, proceed to reset
+                            System.out.print("Please enter your Social Security number without dashes to reset your password: ");
+                            String recoveracct = inputScanner.nextLine();
+
+
+                            // Ensure SSN has no dashes before proceeding
+                            while (recoveracct.contains("-")) {
+                                System.out.print("Dashes are not allowed. Please enter your Social Security number again: ");
+                                recoveracct = inputScanner.nextLine();
+                            }
+
+                            int ssn = user.getSsn(); // Get the user's SSN
+                            String SSNtoString = Integer.toString(ssn);
+                            boolean SSNmatch = false;
+
+                            // Prompt for SSN until the correct one is entered
+                            while (!SSNmatch) {
+                                if (recoveracct.equals(SSNtoString)) {
+                                    // SSN matches, ask for new password
+                                    System.out.print("Enter your new password: ");
+                                    String newpassword = inputScanner.nextLine();
+                                    user.setPassword(newpassword); // Sets it as new password
+                                    System.out.println( "Password reset successfully!");
+                                    SSNmatch = true; // Successfully reset password, exit the loop
+                                    AppendCSV(truePassword, 1, newpassword,user.getUniqID()); // Append new password to CSV or save securely
+                                    passwordmatch = 1; // Exit the outer loop since password was reset
+                                } else {
+                                    // SSN doesn't match, prompt again
+                                    System.out.print("Your Social Security number did not match. Please enter it again: ");
+                                    recoveracct = inputScanner.nextLine();
+
+                                    // Ensure no dashes in SSN input again
+                                    while (recoveracct.contains("-")) {
+                                       System.out.print("Dashes are not allowed. Please enter your Social Security number again: ");
+                                       recoveracct = inputScanner.nextLine();
+                                    }
+                                }
+                            }
+                        } else {
+                            // If password is incorrect and "forgot password" was not entered, prompt again
+                            System.out.print("Incorrect password. Please try again: ");
+                            password = inputScanner.nextLine();
+                            forgotpassword = password.replace(" ", "");
+                        }
+
+                    }
+                    System.out.println( "Welcome back "+user.getFirstname()+" "+user.getLastname());
+                    valid=true;
+
+
+
+
+                } else {
+                    System.out.println( "Invalid Input");
+                }
+
+            }
+            System.out.println("OUT OF LOOP");
+            System.out.println(username);
+            boolean exit=false;
+            while (exit==false) {
+                        System.out.println("Please choose an option: ");
+                        System.out.println("[1] Access Credit Card");
+                        System.out.println("[2] Access Debit Card");
+                        System.out.println("[3] Access CD");
+                        System.out.println("[4] Access ATM");// MONEY TRANSFERS
+                        System.out.println("[5] Manage Checking Account");
+                        System.out.println("[6] Manage Savings Account");
+                        System.out.println("[7] View Balances");
+                        System.out.println("[8] Manage Loans");// Student, Mortgage, personal loan in if statement
+                        System.out.println("[9] Manage Safety Deposit Box ");
+                        System.out.println("[10] Change Personal Information "); // Username, pass, first and last name, SSN, DOB, email, phone num
+                        String MenuOptions = inputScanner.nextLine();
+                        if (MenuOptions.equals("1")) {
+                            //Gabby AND ANT
+                            Scanner scanner = new Scanner(System.in);
+                            CreditCard creditCard = new CreditCard();
+                            creditCard.mainMenu(scanner);
+
+                        }else if (MenuOptions.equals("2")) {
+
+                            Scanner scanner = new Scanner(System.in);
+                                // Ensure that the account_info.csv file exists
+                                ensureFile("src/account_info.csv");
+                                boolean inDebitmenu=true;
+
+                                while (inDebitmenu==true) {
+                                    System.out.println("Choose an option:");
+                                    System.out.println("1. View existing account info");
+                                    System.out.println("2. Create a new account");
+                                    System.out.println("3. Close an account");
+                                    System.out.println("4. Return to Main Menu"); // <--- ADD this
+
+                                    String option = scanner.nextLine().trim();
+
+                                    switch (option) {
+                                        case "1" -> viewAccountInfo(scanner);
+                                        case "2" -> createNewAccount(scanner, user.getUniqID());
+                                        case "3" -> closeAccount(scanner);
+                                        case "4" -> {
+                                            inDebitmenu=false;
+
+                                        }
+                                        default  -> System.out.println("Invalid option. Please try again.");
+                                    }
+                                }
+
+
+
+                        }else if (MenuOptions.equals("3")) {
+
+                             Scanner userinput = new Scanner(System.in);
+
+                            System.out.println("Enter User Name:");
+                            String name = userinput.nextLine();
+                            System.out.println("Welcome New User " + name);
+
+                            // Ask if the user wants to create a certificate of deposit
+                            System.out.println("Would you like to create a certificate of deposit at this time? (yes/no)");
+                            String response = userinput.nextLine();
+
+                            // Handle user input for creating a CD
+                            if (response.equalsIgnoreCase("yes")) {
+                                System.out.println("Great! Let's get started with setting up your certificate of deposit.");
+
+                                // Create CDinterface instance to manage CDs
+                                CDinterface CDI = new CDinterface();
+
+                                // Add predefined CDs to the list
+                                CDI.addCD(new CD(3, 5000.00, 1.45));
+                                CDI.addCD(new CD(6, 5000.00, 2.00));
+                                CDI.addCD(new CD(12, 5000.00, 2.75));
+
+                                // Display the available CD options
+                                CDI.displayCD();
+                                double userAmount = 0.00;
+                                // Ask user if they want to purchase one of the displayed CDs
+                                System.out.println("Do any of these options appeal to you? (y/n)");
+                                String selectResponse = userinput.nextLine();
+                                if (selectResponse.equalsIgnoreCase("y")) {
+                                    System.out.println("Which CD would you like to purchase? (Enter the option number)");
+                                    int selection = userinput.nextInt();
+                                    userinput.nextLine(); // Consume newline after nextInt()
+
+                                    // Handle invalid input for selection
+                                    if (selection > 0 && selection <= CDI.getCDOptionsSize()) {
+                                        // Asking the user to input the amount they want to invest
+                                        System.out.println("Enter the amount you want to invest into this CD (in dollars):");
+                                        userAmount = userinput.nextDouble();
+                                        userinput.nextLine(); // Consume newline after nextDouble()
+
+                                        if (userAmount > 0) {
+                                            // Proceeding with the purchase with the user-specified amount
+                                            double maturityAmount = CDI.getCD(selection).calculateMaturityAmount(userAmount);
+                                            System.out.println("You have selected CD option " + selection + " with an investment of $" + userAmount + ". At maturity, it will be worth $" + maturityAmount);
+                                            // Proceed with the CD purchase simulation
+                                            CDI.PurchaseCD(selection, userAmount);
+                                            addUserstoCD(user.getUniqID(), CDI.getCD(selection).getTerm(), userAmount,CDI.getCD(selection).getIR());
+
+                                        } else {
+                                            System.out.println("Invalid investment amount. No CD purchased.");
+                                        }
+                                    } else {
+                                        System.out.println("Invalid selection. No CD purchased.");
+                                    }
+                                } else {
+                                    System.out.println("No CD selected.");
+                                }
+
+                                // Ask if the user wants to withdraw early
+                                System.out.println("Do you want to withdraw your CD early? (yes/no)");
+                                String earlyWithdrawResponse = userinput.nextLine();
+                                if (earlyWithdrawResponse.equalsIgnoreCase("yes")) {
+                                    double penalty = 0.01 * userAmount; // Default penalty rate (1%)
+                                    System.out.println("You will forfeit all interest and be charged a late withdrawal fee of $" + penalty + ".");
+                                    System.out.println("Your CD has been withdrawn early, and no interest is earned.");
+                                } else if (earlyWithdrawResponse.equalsIgnoreCase("no")) {
+                                    System.out.println("No problem! Let us know when you're ready (we recommend waiting until it matures).");
+                                } else {
+                                    System.out.println("Invalid answer, interpreting as no.");
+                                }
+
+                            } else if (response.equalsIgnoreCase("no")) {
+                                System.out.println("No problem! If you change your mind, let us know.");
+                            } else {
+                                System.out.println("Invalid input. Please respond with 'yes' or 'no'.");
+                            }
+
+                            }else if (MenuOptions.equals("4")) {
+                                    System.out.print("I have no clue on that group  ");
+                            }else if (MenuOptions.equals("5")) {
+                                System.out.println("Need to fix");
+
+                            }else if (MenuOptions.equals("6")) {
+
+
+                            }else if (MenuOptions.equals("7")) {
+                                System.out.println("Need to fix");
+
+                            }else if (MenuOptions.equals("8")) {
+                                System.out.println("Need to fix");
+
+                            }else if (MenuOptions.equals("9")) {
+                                Scanner scanner = new Scanner(System.in);
+                                String UniqueID=String.valueOf(user.getUniqID());
+                                while (true) {
+                                    System.out.println("\n=== Safety Deposit Box System ===");
+                                    System.out.println("1. Login");
+                                    System.out.println("2. Login as an authorized user");
+                                    System.out.println("3. Exit");
+                                    System.out.print("Choose an option: ");
+                                    int choice = -1;
+                                    try {
+                                        choice = Integer.parseInt(scanner.nextLine());
+                                    } catch (NumberFormatException e) {
+                                        System.out.println("Invalid input. Please enter a number.");
+                                        continue;
+                                    }
+
+                                    if (choice == 1) {
+                                        String uniqueId = SafetyDepositBox.login(scanner,Integer.parseInt(UniqueID),user.getSsn(),user.getDob(),user.getFirstname(),user.getLastname(),user.getPassword());
+                                        if (uniqueId != null) {
+                                            SafetyDepositBox.ownerMenu(scanner,UniqueID );
+                                        }
+                                    } else if (choice == 2) {
+                                        SafetyDepositBox.loginAsAuthorizedUser (scanner);
+                                    } else if (choice == 3) {
+                                        System.out.println("Exiting system.");
+                                        break;
+                                    } else {
+                                        System.out.println("Invalid choice. Try again.");
+                                    }
+                                }
+                                scanner.close();
+
+
+
+
+                            }else if (MenuOptions.equals("10")) {
+                                System.out.println("Please Pick an Option to Change");//Username,Password,Firstname,Lastname,SSN,DOB,email,phoneNumber,minimumdeppositinput,uniqueID
+                                 System.out.println("[1] Change Username");
+                                 System.out.println("[2] Change Password");
+                                 System.out.println("[3] Change First Name");
+                                 System.out.println("[4] Change Last Name");
+                                 System.out.println("[5] Change Social Security Number");
+                                 System.out.println("[6] Change Email");
+                                 System.out.println("[7] Change Phone Number");
+                                 String changeOption=inputScanner.nextLine();
+                                 if (changeOption.equalsIgnoreCase("1")) {
+                                     System.out.print("What would you like your new username to be?");
+                                     String newUsername=inputScanner.nextLine();
+                                     String userExists=existinguser(newUsername);
+
+                                    while (newUsername == null || newUsername.isEmpty() || userExists.equals("already exists")) { // isEmpty so it doesn’t edge-case and return a value
+                                        if (userExists.equals("already exists")) {
+                                            System.out.print("Username is already taken. Please enter a different Username: ");
+                                        } else {
+                                            System.out.print("Username cannot be empty. Please enter your Username: ");
+                                        }
+                                        newUsername = inputScanner.nextLine();
+                                        userExists = existinguser(username);
+                                    }
+
+                                 }else if (changeOption.equalsIgnoreCase("2")) {
+                                     System.out.print("What would you like your new password to be?");
+                                     String newPassword=inputScanner.nextLine();
+                                     while (newPassword == null || newPassword.isEmpty()) {
+                                    System.out.print("Password cannot be empty. Please enter your Password: ");
+                                    newPassword = inputScanner.nextLine();
+                                    }
+
+                                 }else if (changeOption.equalsIgnoreCase("3")) {
+                                     System.out.print("What would you like your new first name to be?");
+                                     String newFirstName=inputScanner.nextLine();
+                                     while (newFirstName == null || newFirstName.isEmpty()) {
+                                         System.out.print("First name cannot be empty. Please enter your First Name: ");
+                                         newFirstName = inputScanner.nextLine();
+                                     }
+                                 }else if (changeOption.equalsIgnoreCase("4")) {
+                                     System.out.print("What would you like your new last name to be?");
+                                     String newLastName=inputScanner.nextLine();
+                                     while (newLastName == null || newLastName.isEmpty()) {
+                                         System.out.print("Last name cannot be empty. Please enter your Last Name: ");
+                                         newLastName = inputScanner.nextLine();
+                                     }
+                                 }else if (changeOption.equalsIgnoreCase("5")) {
+                                     System.out.print("Please enter your new Social Security Number: ");
+
+
+                                 }
+                            }
+
+
+            }
+
+
+        }
+    }
+
+     private static String generateVisaCardNumber() {
+        Random random = new Random();
+        StringBuilder cardNumber = new StringBuilder("4");
+        for (int i = 1; i < 16; i++) {
+            cardNumber.append(random.nextInt(10));
+        }
+        return cardNumber.toString();
+    }
+    private static void writeCardInfoToCSV(String firstName, String lastName, String cardType, String cardNumber, String cvc, String expirationDate, String cardPin, String accountPin) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter("card_info.csv", true))) {
+            writer.println(firstName + "," + lastName + "," + cardType + "," + cardNumber + "," + cvc + "," + expirationDate + "," + cardPin + "," + accountPin);
+            System.out.println("Card information written to card_info.csv");
+        } catch (IOException e) {
+            System.out.println("Error writing to CSV file: " + e.getMessage());
+        }
+    }
+
+    // Revised genid() method to generate a 6-digit ID as an integer
+    static int genid() {
+        StringBuilder id = new StringBuilder(); // Used chatgpt to figure this out I didn't know that you can't append ints
+        Random rand = new Random();
+        for (int i = 0; i < 6; i++) {
+            int randnum = rand.nextInt(10); // Generates numbers between 0 and 9
+            id.append(randnum);
+        }
+        return Integer.parseInt(id.toString()); // Converts the generated string to an integer
+    }
+    public static String existinguser(String username) throws FileNotFoundException { //to make sure two users cannot have the same username when signing up or changing username
+        Scanner csvreader = new Scanner(new File("src/UserData.csv"));
+        boolean userexists = false;
+        while (csvreader.hasNextLine()) {
+            String line = csvreader.nextLine().trim();
+            if (!line.isEmpty()) {  // Skip empty lines
+                String[] UserDatacopier = line.split(",");
+                if (UserDatacopier[0].equals(username)) {
+                    userexists = true;
+                    break;
+                }else{
+                    userexists = false;
+                }
+            }
+        }
+        if (userexists) {
+            return "already exists";
+        }else{
+            return "does not exists";
+        }
+
+
+
+    }
+    public static void addUserstoCD(int UniqueID, double termLength, double amount, double interest ) throws FileNotFoundException {
+        // Scanner to read existing CSV
+        Scanner csvreader = new Scanner(new File("src/CD.csv"));
+        File tempFile = new File("src/temp.csv"); // I originally had this as a file manually added in the beginning but I realized it would be better to create this in the method and delete the UserData that we had before
+        // PrintWriter to write to temp.csv
+        PrintWriter out = new PrintWriter(new File("src/temp.csv"));
+
+        // Copy existing data from UserData.csv to temp.csv
+        while (csvreader.hasNextLine()) {
+            String line = csvreader.nextLine().trim();
+            String[] UserDatacopier = line.split(",");
+
+            for (int i = 0; i < UserDatacopier.length; i++) {
+                UserDatacopier[i] = UserDatacopier[i].trim();
+            }
+
+            // Write the formatted data back to temp.csv
+            out.println(String.join(",", UserDatacopier));
+        }
+
+        // From video referenced in the beginning
+        out.println(String.join(",", Integer.toString(UniqueID),  Double.toString(termLength), Double.toString(amount), Double.toString(interest)));
+
+        // Close resources since they wont be used unless the method is called
+        csvreader.close();
+        out.close();
+        File userDataFile = new File("src/CD.csv");
+        userDataFile.delete();
+        tempFile.renameTo(new File("src/CD.csv"));
+    }
+
+    // to add new user data
+    public static void addUser(String username, String password, String firstname, String lastname, int ssn, String dob, String email, long phone, double minimumdeposit,String DefaultBank ,int ID) throws FileNotFoundException {
+        // Scanner to read existing CSV
+        Scanner csvreader = new Scanner(new File("src/UserData.csv"));
+        File tempFile = new File("src/temp.csv"); // I originally had this as a file manually added in the beginning but I realized it would be better to create this in the method and delete the UserData that we had before
+        // PrintWriter to write to temp.csv
+        PrintWriter out = new PrintWriter(new File("src/temp.csv"));
+
+        // Copy existing data from UserData.csv to temp.csv
+        while (csvreader.hasNextLine()) {
+            String line = csvreader.nextLine().trim();
+            String[] UserDatacopier = line.split(",");
+
+            for (int i = 0; i < UserDatacopier.length; i++) {
+                UserDatacopier[i] = UserDatacopier[i].trim();
+            }
+
+            // Write the formatted data back to temp.csv
+            out.println(String.join(",", UserDatacopier));
+        }
+
+        // From video referenced in the beginning, now including the unique ID as the 10th field
+        out.println(String.join(",", username, password, firstname, lastname, Integer.toString(ssn), dob, email, Long.toString(phone), Double.toString(minimumdeposit),DefaultBank, Integer.toString(ID)));
+
+        // Close resources since they wont be used unless the method is called
+        csvreader.close();
+        out.close();
+        File userDataFile = new File("src/UserData.csv");
+        userDataFile.delete();
+        tempFile.renameTo(new File("src/UserData.csv"));
+    }
+
+    // to replace user data
+    public static void AppendCSV(String Keyword, int Index, String replacement,int UniqID) throws FileNotFoundException {
+        Scanner csvreader = new Scanner(new File("src/UserData.csv"));
+        String UniqueID = Integer.toString(UniqID);
+        File tempFile = new File("src/temp.csv");
+        PrintWriter out = new PrintWriter(tempFile);
+
+        // Copy existing data from UserData.csv to temp.csv
+        while (csvreader.hasNextLine()) {
+            String line = csvreader.nextLine().trim();
+            if (!line.isEmpty()) {  // Skip empty lines
+                String[] UserDatacopier = line.split(",");
+
+                // Trim each column value
+                for (int i = 0; i < UserDatacopier.length; i++) {
+                    UserDatacopier[i] = UserDatacopier[i].trim();
+                    if (UserDatacopier[Index].equals(Keyword) && UserDatacopier[9].equals(UniqueID)) { // Replace the old at the index if it matches the keyword
+                        UserDatacopier[Index] = replacement;
+                    }
+                }
+
+                out.println(String.join(",", UserDatacopier)); // Write to the new file
+
+            }
+        }
+
+        // Close resources
+        csvreader.close();
+        out.close();
+
+        File originalFile = new File("src/UserData.csv");
+        originalFile.delete(); // Delete the original file
+        tempFile.renameTo(new File("src/UserData.csv")); // Rename the temporary file
+    }
+
+    // this returns the user info based on the input username
+    public static UserData users(String username) throws FileNotFoundException {
+        Scanner scanner = new Scanner(new File("src/UserData.csv"));
+        while (scanner.hasNextLine()) {
+            String line = scanner.nextLine();
+            String[] userArray = line.split(",");
+            if (userArray[0].equals(username)) {
+                // Parse the user data to create a UserData object
+                return new UserData(userArray[0], userArray[1], userArray[2], userArray[3],
+                        Integer.parseInt(userArray[4]), userArray[5], userArray[6], Long.parseLong(userArray[7]),
+                        Double.parseDouble(userArray[8]),userArray[9] ,Integer.parseInt(userArray[10]));
+            }
+        }
+        return null; // return null if the user is not found
+    }
+
+    // Rohan and WILL
+    private static void viewAccountInfo(Scanner sc) {
+        System.out.print("Enter account holder's name: ");
+        String holderName = sc.nextLine().trim();
+
+        System.out.print("Enter your 4-digit PIN: ");
+        String enteredPin = sc.nextLine().trim();
+
+// read CSV file containing account info
+        try (Scanner csv = new Scanner(new File("src/account_info.csv"))) {
+            boolean found = false;
+
+            while (csv.hasNextLine()) {
+                String[] f = csv.nextLine().split(",");
+
+                if (f.length < 9) continue;
+
+                String accountHolder = f[2].trim();
+                String storedPin = f[8].trim();
+
+// If info matches, display account info
+                if (accountHolder.equalsIgnoreCase(holderName)) {
+                    if (storedPin.equals(enteredPin)) {
+                        found = true;
+                        System.out.println("\nAccount Holder: " + f[2]);
+                        System.out.println("Account Number: " + f[1]);
+                        System.out.println("Balance: " + String.format("%.2f", Double.parseDouble(f[3])));
+                        System.out.println("PIN: " + f[8]);
+                        break;
+                    } else {
+                        System.out.println("Incorrect PIN.");
+                        return;
+                    }
+                }
+            }
+
+// If no matching account
+            if (!found) {
+                System.out.println("No matching account found.");
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading CSV: " + e.getMessage());
+        }
+
+        waitForBack(sc);
+    }
+
+// new account
+    private static void createNewAccount(Scanner sc,int uniqID) throws FileNotFoundException {
+        System.out.println("Provide the following information to create a new account:");
+
+
+        System.out.print("Account holder name: ");
+        String holderName = sc.nextLine();
+
+
+        String accountNumber = "4" + String.format("%015d", (long) (Math.random() * 1_000_000_000_000_000L));
+
+        double balance = 0.0;
+        boolean overdraftProtection = false;
+        double overdraftLimit = 0.0;
+        String dateOpened = java.time.LocalDate.now().toString();
+        String lastTransactionDate = "None";
+
+
+        String cvv = String.format("%03d", (int) (Math.random() * 1000));
+        String expiryDate = java.time.LocalDate.now().plusYears(5).format(java.time.format.DateTimeFormatter.ofPattern("MM/yy"));
+        String fourDigitCode = String.format("%04d", (int) (Math.random() * 10000));
+
+// user set pin
+        System.out.print("Set your 4-digit Account Security PIN: ");
+        String pin = sc.nextLine();
+
+ // Write new account to CSV
+
+        writeAccountInfoToCSV(uniqID, accountNumber, holderName, balance, overdraftProtection, overdraftLimit, dateOpened, lastTransactionDate, pin);
+
+        // Display the newly created account's card details
+        System.out.println("\nYour new card details:");
+        System.out.println("Account Number: " + accountNumber);
+        System.out.println("CVV: " + cvv);
+        System.out.println("Expiry Date: " + expiryDate);
+        System.out.println("4-Digit Code: " + fourDigitCode);
+
+
+        waitForBack(sc);
+    }
+
+    private static void closeAccount(Scanner sc) {
+        // Prompt for account holder's name and PIN
+        System.out.print("Enter account holder's name: ");
+        String holderName = sc.nextLine().trim();
+        System.out.print("Enter your 4-digit PIN: ");
+        String enteredPin = sc.nextLine().trim();
+
+        List<String> keep = new ArrayList<>();
+        boolean removed = false;
+
+// Read CSV and removes value
+        try (Scanner csv = new Scanner(new File("account_info.csv"))) {
+            while (csv.hasNextLine()) {
+                String line = csv.nextLine();
+                String[] f = line.split(",");
+                if (f.length < 9) continue;
+
+                String accountHolder = f[2].trim();
+                String storedPin = f[8].trim();
+
+// If info matches mark for removal
+                if (accountHolder.equalsIgnoreCase(holderName) && storedPin.equals(enteredPin)) {
+                    removed = true;
+                } else {
+                    keep.add(line);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading CSV: " + e.getMessage());
+        }
+
+// If account was found and removed
+        if (!removed) {
+            System.out.println("No matching account found or incorrect PIN.");
+        } else {
+            try (PrintWriter w = new PrintWriter(new FileWriter("account_info.csv"))) {
+                for (String line : keep) w.println(line);
+            } catch (IOException e) {
+                System.out.println("Error writing CSV: " + e.getMessage());
+            }
+            System.out.println("Account closed successfully.");
+        }
+
+
+        waitForBack(sc);
+    }
+
+//write the new account info to CSV
+    private static void writeAccountInfoToCSV(int id, String accountNumber, String holderName, double balance,
+                                               boolean overdraftProtection, double overdraftLimit, String dateOpened,
+                                               String lastTransactionDate, String pin) {
+        try (PrintWriter w = new PrintWriter(new FileWriter("src/account_info.csv", true))) {
+// Write account data in CSV format
+            w.println(id + "," + accountNumber + "," + holderName + "," + balance + "," +
+                      overdraftProtection + "," + overdraftLimit + "," + dateOpened + "," + lastTransactionDate + "," + pin);
+        } catch (IOException e) {
+            System.out.println("Error writing CSV: " + e.getMessage());
+        }
+    }
+
+// "back" to return to main menu
+    private static String waitForBack(Scanner sc) {
+        System.out.println("\nType 'back' to return to the previous menu ");
+    while (true) {
+        String input = sc.nextLine().trim().toLowerCase();
+        if (input.equals("back")) {
+            return "back";
+        }
+        System.out.print("Invalid input. Please type 'back' or 'main': ");
+    }
+    }
+
+// Ensure that the account_info.csv file exists
+    private static void ensureFile(String name) {
+        try {
+            File f = new File(name);
+            if (!f.exists()) f.createNewFile();
+        } catch (IOException e) {
+            System.out.println("Error ensuring file existence: " + e.getMessage());
+        }
+    }
+}
+
+class UserData {
+    private String username;
+    private String password;
+    private String firstname;
+    private String lastname;
+    private int ssn;
+    private String dob;
+    private String email;
+    private long phone;
+    private double minimumdeposit;
+    private String DefaultBank;
+    private int uniqID;
+
+    UserData() {
+        this.username = "";
+        this.password = "";
+        this.firstname = "";
+        this.lastname = "";
+        this.ssn = 0;
+        this.dob = "";
+        this.email = "";
+        this.phone = 0;
+        this.minimumdeposit = 0;
+        this.DefaultBank = "";
+        this.uniqID = 0;
+    }
+
+    UserData(String username, String password, String firstname, String lastname, int ssn, String dob, String email, long phone, double minimumdeposit,String DefaultBank ,int uniqID) {
+        this.username = username;
+        this.password = password;
+        this.firstname = firstname;
+        this.lastname = lastname;
+        this.ssn = ssn;
+        this.dob = dob;
+        this.email = email;
+        this.phone = phone;
+        this.DefaultBank = DefaultBank;
+        this.uniqID = uniqID;
+
+    }
+    public String getUsername() {
+        return username;
+    }
+    public void setUsername(String username) {
+        this.username = username;
+    }
+    public String getPassword() {
+        return password;
+    }
+    public void setPassword(String password) {
+        this.password = password;
+    }
+    public String getFirstname() {
+        return firstname;
+    }
+    public void setFirstname(String firstname) {
+        this.firstname = firstname;
+    }
+    public String getLastname() {
+        return lastname;
+    }
+    public void setLastname(String lastname) {
+        this.lastname = lastname;
+    }
+    public int getSsn() {
+        return ssn;
+    }
+    public void setSsn(int ssn) {
+        this.ssn = ssn;
+    }
+    public String getDob() {
+        return dob;
+    }
+    public String getEmail() {
+        return email;
+    }
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    public long getPhone() {
+        return phone;
+    }
+    public void setPhone(long phone) {
+        this.phone = phone;
+    }
+    public double getMinimumdeposit() {
+        return minimumdeposit;
+    }
+    public void setMinimumdeposit(double minimumdeposit) {
+        this.minimumdeposit = minimumdeposit;
+    }
+    public int getUniqID() {
+        return uniqID;
+    }
+    public void setDob(String dob) {
+        this.dob = dob;
+    }
+    public void setID(int uniqID) {
+        this.uniqID = uniqID;
+    }
+}
+
+
+
+
+//from GABBY AND ANT CREDIT CARD
+class CreditCard {
+
+    // Constants
+    private static final double MAX_CREDIT_LIMIT = 15000.00;
+    private static final double MIN_CREDIT_LIMIT = 500.00;
+    private static final double MAX_CREDIT_SCORE = 850;
+    private static final double MIN_CREDIT_SCORE = 300;
+    private static final double MAX_DTI_RATIO = 36.0;
+    private static final double MAX_CREDIT_UTILIZATION = 0.3;
+
+    // Instance variables
+    private double creditLimit;
+    private double balance;
+    private double interestRate;
+    private ArrayList<Double> bankStatement;
+    private LocalDate billingCycleEnd;
+    private long creditCardNumber;
+    private long creditCardCVV;
+    private String expirationDate;
+    private int UniqueID;
+
+    // Constructor
+    public CreditCard() {
+        bankStatement = new ArrayList<>();
+        billingCycleEnd = LocalDate.now().plusMonths(1);
+        expirationDate = "03/28"; // Default expiration date
+    }
+    public void getID(int iD){
+        this.UniqueID = iD;
+    }
+
+
+
+    // Main Menu method with two different paths
+    public void mainMenu(Scanner scanner) {
+        while (true) {
+            try {
+                System.out.println("\nWelcome to Credit Card Services:");
+                System.out.println("1. Do you have a credit card?");
+                System.out.println("2. Do you want to apply for a credit card?");
+                System.out.println("3. Exit");
+
+                int mainChoice = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
+
+                switch (mainChoice) {
+                    case 1:
+                        existingCardMenu(scanner);
+                        break;
+                    case 2:
+                        newCardMenu(scanner);
+                        break;
+                    case 3:
+                        System.out.println("Exiting program...");
+                        return;
+                    default:
+                        System.out.println("Invalid choice. Please enter a number between 1 and 3.");
+                }
+            } catch (Exception e) {
+                System.out.println("An error occurred: " + e.getMessage());
+                scanner.nextLine(); // Clear invalid input
+            }
+        }
+    }
+
+    // Menu for existing credit card holders
+    public void existingCardMenu(Scanner scanner) {
+        while (true) {
+            try {
+                System.out.println("\nExisting Credit Card Holder Menu:");
+                System.out.println("1. Pay Using Credit Card");
+                System.out.println("2. Review Bank Statement");
+                System.out.println("3. Pay Bank Statement");
+                System.out.println("4. Return to Main Menu");
+
+                int menuChoice = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
+
+                switch (menuChoice) {
+                    case 1:
+                        payUsingCredit(scanner);
+                        break;
+                    case 2:
+                        printStatement();
+                        break;
+                    case 3:
+                        payBankStatement(scanner);
+                        break;
+                    case 4:
+                        return;
+                    default:
+                        System.out.println("Invalid choice. Please enter a number between 1 and 4.");
+                }
+            } catch (Exception e) {
+                System.out.println("An error occurred: " + e.getMessage());
+                scanner.nextLine(); // Clear invalid input
+            }
+        }
+    }
+
+    // Menu for new credit card applicants
+    public void newCardMenu(Scanner scanner) {
+        while (true) {
+            try {
+                System.out.println("\nNew Credit Card Applicant Menu:");
+                System.out.println("1. Apply for Credit");
+                System.out.println("2. Return to Main Menu");
+
+                int menuChoice = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
+
+                switch (menuChoice) {
+                    case 1:
+                        applyForCredit(scanner);
+                        return;
+                    case 2:
+                        return;
+                    default:
+                        System.out.println("Invalid choice. Please enter 1 or 2.");
+                }
+            } catch (Exception e) {
+                System.out.println("An error occurred: " + e.getMessage());
+                scanner.nextLine(); // Clear invalid input
+            }
+        }
+    }
+
+    // Credit Card Approval method with improved validation
+    public void applyForCredit(Scanner scanner) {
+        System.out.println("Applying for credit...");
+
+        int creditScore = getCreditScore(scanner);
+        double interestRateD = getInterestRate(creditScore);
+        double creditURate = getCreditURate(scanner);
+        double dti = getDTI(scanner);
+
+        // Generate card details
+        creditCardNumber = getCreditCardNumber();
+        creditCardCVV = getCreditCardCVV();
+        creditLimit = getCreditCardLimit(creditScore);
+
+        // Display and save credit card terms
+        creditCardTerms(creditCardNumber, creditCardCVV, expirationDate, interestRateD, creditLimit);
+        writeUserDataToCSV("creditCardData.csv", creditCardNumber, creditCardCVV, creditLimit, expirationDate, interestRateD);
+    }
+
+    // Validate and get credit score
+    public int getCreditScore(Scanner scanner) {
+        while (true) {
+            try {
+                System.out.print("Please enter your credit score: ");
+                int creditScore = scanner.nextInt();
+
+                if (creditScore < MIN_CREDIT_SCORE || creditScore > MAX_CREDIT_SCORE) {
+                    System.out.printf("Credit score must be between %.0f and %.0f. Please try again.\n",
+                            MIN_CREDIT_SCORE, MAX_CREDIT_SCORE);
+                    continue;
+                }
+
+                return creditScore;
+            } catch (Exception e) {
+                System.out.println("Invalid input. Please enter a valid credit score.");
+                scanner.nextLine(); // Clear invalid input
+            }
+        }
+    }
+
+    // Validate Debt-to-Income Ratio
+    public double getDTI(Scanner scanner) {
+        while (true) {
+            try {
+                System.out.print("What are your total monthly debt payments? ");
+                double monthlyDebt = scanner.nextDouble();
+
+                System.out.print("What is your yearly salary? ");
+                double yearlySalary = scanner.nextDouble();
+
+                double dti = (monthlyDebt / (yearlySalary / 12)) * 100;
+
+                if (dti > MAX_DTI_RATIO) {
+                    System.out.println("Your debt-to-income ratio is too high to be approved for a credit card.");
+                    continue;
+                }
+
+                return dti;
+            } catch (Exception e) {
+                System.out.println("Invalid input. Please enter valid numbers.");
+                scanner.nextLine(); // Clear invalid input
+            }
+        }
+    }
+
+    // Validate Credit Utilization Rate
+    public double getCreditURate(Scanner scanner) {
+        while (true) {
+            try {
+                System.out.print("Sum of current credit card balances: ");
+                double balanceA = scanner.nextDouble();
+
+                System.out.print("Sum of current credit card limits: ");
+                double limitA = scanner.nextDouble();
+
+                double creditURate = balanceA / limitA;
+
+                if (creditURate > MAX_CREDIT_UTILIZATION) {
+                    System.out.println("Credit utilization rate is too high for approval.");
+                    continue;
+                }
+
+                return creditURate;
+            } catch (Exception e) {
+                System.out.println("Invalid input. Please enter valid numbers.");
+                scanner.nextLine(); // Clear invalid input
+            }
+        }
+    }
+
+    // Determine Interest Rate Based on Credit Score
+    public double getInterestRate(int creditScore) {
+        if (creditScore <= 579) return 0.211;
+        if (creditScore <= 619) return 0.202;
+        if (creditScore <= 659) return 0.191;
+        if (creditScore <= 719) return 0.169;
+        return 0.127;
+    }
+
+    // Generate Random Credit Card Number
+    public long getCreditCardNumber() {
+        return ThreadLocalRandom.current().nextLong(1_000_000_000_000_000L, 10_000_000_000_000_000L);
+    }
+
+    // Generate Random CVV Number
+    public long getCreditCardCVV() {
+        return ThreadLocalRandom.current().nextLong(100, 1000);
+    }
+
+    // Determine Credit Card Limit Based on Credit Score
+    public double getCreditCardLimit(int creditScore) {
+        if (creditScore > 750) return MAX_CREDIT_LIMIT;
+        if (creditScore >= 700) return 7500.00;
+        if (creditScore >= 650) return 3500.00;
+        if (creditScore >= 600) return 1250.00;
+        return MIN_CREDIT_LIMIT;
+    }
+
+    // Print Credit Card Terms
+    public void creditCardTerms(long creditCardNumber, long creditCardCVV,
+                                String expirationDate, double interestRateD, double creditLimit) {
+        DecimalFormat df = new DecimalFormat("#0.00");
+
+        System.out.println("\nApproved Credit Card Details:");
+        System.out.println("Number: " + creditCardNumber);
+        System.out.println("CVV: " + creditCardCVV);
+        System.out.println("Expiration Date: " + expirationDate);
+        System.out.println("Default Interest Rate: " + interestRateD);
+        System.out.println("Credit Card Limit: $" + df.format(creditLimit));
+    }
+
+    // Pay Using Credit Card
+    public void payUsingCredit(Scanner scanner) {
+        System.out.println("Enter credit card number:");
+        long cardNumber = scanner.nextLong();
+
+        System.out.println("Enter CVV:");
+        long cvv = scanner.nextLong();
+
+        if (!validateCard(cardNumber, cvv)) {
+            System.out.println("Invalid credit card number or CVV.");
+            return;
+        }
+
+        System.out.println("Enter amount to swipe:");
+        double swipeAmount = scanner.nextDouble();
+
+        swipe(swipeAmount);
+    }
+
+    // Validate Card Against CSV File
+    public boolean validateCard(long cardNumber, long cvv) {
+        String csvFile = "csv/creditCardData.csv";
+
+        try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
+            String line;
+            br.readLine(); // Skip header
+
+            while ((line = br.readLine()) != null) {
+                String[] data = line.split(",");
+                long storedCardNumber = Long.parseLong(data[0].trim());
+                long storedCVV = Long.parseLong(data[1].trim());
+
+                if (storedCardNumber == cardNumber && storedCVV == cvv) {
+                    return true;
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading card data: " + e.getMessage());
+        }
+
+        return false;
+    }
+
+    // Swipe Transaction
+    public void swipe(double swipeAmount) {
+        if (balance + swipeAmount > creditLimit) {
+            System.out.println("Transaction failed. Credit limit exceeded.");
+        } else {
+            balance += swipeAmount;
+            bankStatement.add(swipeAmount);
+            System.out.println("Transaction successful.");
+        }
+    }
+
+    // Print Bank Statement
+    public void printStatement() {
+        DecimalFormat df = new DecimalFormat("#0.00");
+
+        System.out.println("Bank Statement:");
+        bankStatement.forEach(transaction -> System.out.println("$" + transaction));
+
+        System.out.println("Current amount spent: $" + df.format(balance));
+
+        LocalDate currentDate = LocalDate.now();
+        LocalDate lastDayOfMonth = currentDate.withDayOfMonth(currentDate.lengthOfMonth());
+        int daysLeft = lastDayOfMonth.getDayOfMonth() - currentDate.getDayOfMonth() + 1;
+
+        System.out.println("Days left in billing cycle: " + daysLeft);
+    }
+
+    // Pay Bank Statement
+    public void payBankStatement(Scanner scanner) {
+        DecimalFormat df = new DecimalFormat("#0.00");
+
+        double totalStatement = getTotalStatement();
+        double minimumPayment = totalStatement * 0.05;
+
+        System.out.println("Your minimum payment is: $" + df.format(minimumPayment));
+        System.out.println("Enter amount to pay:");
+
+        double payAmount = scanner.nextDouble();
+
+        if (payAmount >= minimumPayment && payAmount <= totalStatement) {
+            balance -= payAmount;
+            System.out.println("Payment successful. Remaining balance: $" + df.format(balance));
+        } else {
+            System.out.println("Payment failed. Please pay at least the minimum statement and not more than the total statement.");
+        }
+    }
+
+    // Calculate Total Statement Amount
+    public double getTotalStatement() {
+        return bankStatement.stream().mapToDouble(Double::doubleValue).sum();
+    }
+
+    // Write User Data to CSV
+    public void writeUserDataToCSV(String filename, long creditCardNumber, long creditCardCVV,
+                                   double creditLimit, String expirationDate, double interestRateD) {
+        String directoryName = "csv";
+        File directory = new File(directoryName);
+        if (!directory.exists()) {
+            directory.mkdir();
+        }
+
+        String fullPath = directoryName + File.separator + filename;
+
+        try (FileWriter writer = new FileWriter(fullPath, true)) {
+            writer.write("Number,CVV,Credit Limit,Expiration Date,Default Interest Rate\n");
+            writer.write(String.format("%d,%d,%.2f,%s,%.3f\n",
+                    creditCardNumber, creditCardCVV, creditLimit, expirationDate, interestRateD));
+            System.out.println("User data has been written to CSV file.");
+        } catch (IOException e) {
+            System.out.println("Error writing to CSV: " + e.getMessage());
+        }
+    }
+}
+
+
+
+
+
+
+//GABE AND LANDON
+
+
+class CD {
+    double term;
+    double Principal;
+    double IR;
+
+    // Constructor with parameters
+    public CD(double t, double p, double ir) {
+        this.term = t;
+        this.Principal = p;
+        this.IR = ir;
+    }
+
+    // Method to calculate maturity amount based on principal, interest rate, and term
+    public double calculateMaturityAmount(double principal) {
+        return principal * (1 + ((IR) / 100) * (term / 12));
+    }
+
+    // Display CD information
+    public void displayCD() {
+        System.out.println("Term: " + term + " month(s), Principal: $" + Principal + ", Interest Rate: " + IR + "%");
+    }
+
+    // Getter methods
+    public double getTerm() {
+        return this.term;
+    }
+
+    public double getIR() {
+        return this.IR;
+    }
+}
+
+class CDinterface {
+    private static ArrayList<CD> CDoptions = new ArrayList<>();
+
+    // Add a CD to the list
+    public static void addCD(CD c) {
+        CDoptions.add(c);
+    }
+
+    // Add multiple CDs
+    public static void addCDs(ArrayList<CD> cds) {
+        CDoptions.addAll(cds);
+    }
+
+    // Get the size of available CDs
+    public static int getCDOptionsSize() {
+        return CDoptions.size();
+    }
+
+    // Display all CDs
+    public static void displayCD() {
+        System.out.println("Available Certificate of Deposit Options:");
+        for (int i = 0; i < CDoptions.size(); i++) {
+            System.out.println("Option " + (i + 1) + ":");
+            CDoptions.get(i).displayCD();
+        }
+    }
+
+    // Method to simulate CD purchase
+    public static void PurchaseCD(int selection, double userAmount) {
+        CD selectedCD = CDoptions.get(selection - 1);
+        System.out.println("You have purchased a " + selectedCD.getTerm() + "-month CD with $" + userAmount + " at an interest rate of " + selectedCD.getIR() + "%.");
+    }
+
+    public static CD getCD(int selection) {
+        return CDoptions.get((selection - 1));
+    }
+
+}
+
+
+
+//manav
+
+
+class SafetyDepositBox {
+
+    private static Map<String, BoxDetails> boxes = new HashMap<>();
+    private static final Map<String, BoxDetails> BOX_SIZES = new HashMap<>();
+    private static final String CSV_FILE_PATH = "src/BankDepositBox.csv";
+    private static final Map<String, Set<String>> authorizedUsers = new HashMap<>(); // BoxKey -> Set of authorized usernames
+    private static final SimpleDateFormat DOB_FORMAT = new SimpleDateFormat("MMddyyyy");
+    private static final Map<String, String[]> userInfoMap = new HashMap<>();
+    private static String username;
+
+    static {
+        BOX_SIZES.put("Small", new BoxDetails("Small", "5\" x 5\" x 21.5\"", 50.0));
+        BOX_SIZES.put("Medium", new BoxDetails("Medium", "3\" x 10\" x 21.5\"", 60.0));
+        BOX_SIZES.put("Large", new BoxDetails("Large", "5\" x 10\" x 21.5\"", 80.0));
+
+        loadBoxesFromCSV();
+    }
+
+    static {
+        userInfoMap.put("123456", new String[]{"Manav", "Shah", "12182008", "123456789", "123"});
+        userInfoMap.put("654321", new String[]{"Jane", "Doe", "01011990", "987654321", "abc"});
+    }
+
+
+    private static boolean isValidDate(String dateStr) {
+        if (dateStr == null || dateStr.length() != 8) {
+            return false;
+        }
+        try {
+            DOB_FORMAT.setLenient(false);
+            DOB_FORMAT.parse(dateStr);
+            return true;
+        } catch (ParseException e) {
+            return false;
+        }
+    }
+
+    static String login(Scanner scanner,int UniqueID,int ssn,String Dob,String firstname,String Lastname,String Password) {
+        System.out.println("=== Login ===");
+
+        System.out.print("Enter your First Name: ");
+        String firstnamecheck = scanner.nextLine();
+
+        System.out.print("Enter your Last Name: ");
+        String lastnamecheck = scanner.nextLine();
+
+        String dob;
+        while (true) {
+            System.out.print("Enter your date of birth (MMDDYYYY): ");
+            dob = scanner.nextLine();
+            if (isValidDate(dob)) {
+                break;
+            } else {
+                System.out.println("Invalid date format. Please enter in MMDDYYYY format.");
+            }
+        }
+
+        String ssncheck="";
+        while (true) {
+            System.out.print("Enter your Social Security Number (SSN): ");
+            ssncheck = scanner.nextLine();
+            if (ssncheck.matches("\\d{9}")) {
+                break;
+            } else {
+                System.out.println("Invalid SSN format. Please enter exactly 9 digits.");
+            }
+        }
+
+        System.out.print("Enter your password: ");
+        String password = scanner.nextLine();
+
+        for (Map.Entry<String, String[]> entry : userInfoMap.entrySet()) {
+            String id = entry.getKey();
+            String[] info = entry.getValue();
+
+            if ((firstname + Lastname).equals(info[0] + info[1]) && dob.equals(info[2]) && ssn==Integer.parseInt(info[3]) && password.equals(info[4])) {
+                if(isUniqueIdInCSV(String.valueOf(123456))) {
+                    System.out.println("Login successful!");
+                    return id;
+                } else {
+                    System.out.println("You are not in the system. Access denied.");
+                    return null;
+                }
+            }
+        }
+
+        System.out.println("Invalid credentials. Please try again.");
+        return null;
+    }
+
+    private static boolean isUniqueIdInCSV(String uniqueId) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
+            String line = reader.readLine(); // Skip header
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length >= 11 && parts[10].trim().equals(uniqueId)) {
+                    return true;
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading CSV: " + e.getMessage());
+        }
+        return false;
+    }
+
+
+    private static void loadBoxesFromCSV() {
+        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
+
+
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length >= 9) {
+                    String boxKey = parts[0];
+                    String size = parts[1];
+                    String dimensions = parts[2];
+                    try {
+                        double cost = Double.parseDouble(parts[3]);
+                        String contents = parts[4];
+                        double totalValue = Double.parseDouble(parts[5]);
+                        BoxDetails box = new BoxDetails(size, dimensions, cost, contents, totalValue);
+                        boxes.put(boxKey, box);
+                    } catch (NumberFormatException e) {
+
+                    }
+                }
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("No previous data file found.");
+        } catch (IOException e) {
+            System.out.println("Error reading data file: " + e.getMessage());
+        }
+    }
+
+    static void ownerMenu(Scanner scanner, String uniqueId) {
+        System.out.println("\n=== Owner Menu ===");
+        if (hasExistingBox(uniqueId)) {
+            System.out.println("Your deposit box:");
+            viewBoxDetails(uniqueId);
+        }
+
+        while (true) {
+            System.out.println("\n1. Create Box");
+            System.out.println("2. Modify Box Contents");
+            System.out.println("3. View Box Details");
+            System.out.println("4. Change Box size");
+            System.out.println("5. Grant Access to Other User");
+            System.out.println("6. View Authorized Users");
+            System.out.println("7. Logout");
+            System.out.print("Choose an option: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine();
+
+            if (choice == 1) {
+                createBox(scanner, uniqueId);
+            } else if (choice == 2) {
+                modifyBoxContents(scanner, uniqueId);
+            } else if (choice == 3) {
+                viewBoxDetails(uniqueId);
+            } else if (choice == 4) {
+            	 changeBoxSize(scanner, uniqueId);
+            } else if (choice == 5) {
+                grantAccessToUser(scanner, uniqueId);
+            } else if (choice == 6) {
+                viewAuthorizedUsers(uniqueId);
+
+            } else if (choice == 7) {
+                System.out.println("Logged out.");
+                break;
+            } else {
+                System.out.println("Invalid choice. Try again.");
+            }
+        }
+    }
+
+    private static boolean hasExistingBox(String uniqueId) {
+        for (String boxId : boxes.keySet()) {
+            if (boxId.startsWith(uniqueId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    private static void changeBoxSize(Scanner scanner, String uniqueId) {
+        System.out.println("\n=== Change Box Size ===");
+
+        // Find current box
+        String oldBoxKey = null;
+        for (String key : boxes.keySet()) {
+            if (key.startsWith(uniqueId)) {
+                oldBoxKey = key;
+                break;
+            }
+        }
+
+        if (oldBoxKey == null) {
+            System.out.println("No box found for this user.");
+            return;
+        }
+
+        BoxDetails currentBox = boxes.get(oldBoxKey);
+
+        System.out.println("Current size: " + currentBox.getSize());
+        System.out.println("Available sizes:");
+        for (String size : BOX_SIZES.keySet()) {
+            System.out.println("- " + size);
+        }
+
+        System.out.print("Enter new box size: ");
+        String inputSize = scanner.nextLine();
+        String newSize = normalizeSize(inputSize);
+
+        if (newSize == null || !BOX_SIZES.containsKey(newSize)) {
+            System.out.println("Invalid size.");
+            return;
+        }
+
+
+        BoxDetails newTemplate = BOX_SIZES.get(newSize);
+        currentBox.setSize(newSize);
+        currentBox.setDimensions(newTemplate.getDimensions());
+        currentBox.setCost(newTemplate.getCost());
+
+        String newBoxKey = uniqueId + "_" + newSize;
+
+        boxes.remove(oldBoxKey);
+        boxes.put(newBoxKey, currentBox);
+
+        saveBoxesToCSV(newBoxKey, "Modified");
+
+        System.out.println("Box size updated successfully!");
+    }
+
+
+
+    private static void viewBoxDetails(String uniqueId) {
+    	// Look for a box associated with the uniqueId
+        for (String boxKey : boxes.keySet()) {
+            if (boxKey.startsWith(uniqueId)) {
+                BoxDetails box = boxes.get(boxKey);
+                System.out.println("\nBox Details:");
+                System.out.println("Size: " + box.getSize());
+                System.out.println("Dimensions: " + box.getDimensions());
+                System.out.println("Contents: " + box.getContents());
+                System.out.println("Cost: $" + box.getCost());
+                System.out.println("Total Value: $" + box.getTotalValue());
+                return;
+            }
+        }
+        System.out.println("No box found for your account.");
+    }
+
+    private static void createBox(Scanner scanner, String uniqueId) {
+
+    	for (String key : boxes.keySet()) {
+    	    if (key.startsWith(uniqueId + "_")) {
+    	        System.out.println("You already have a box. Cannot create another one.");
+    	        return;
+    	    }
+    	}
+    	  System.out.println("\n=== Create Box ===");
+
+    	    System.out.println("Available box sizes:");
+    	    for (String size : BOX_SIZES.keySet()) {
+    	        BoxDetails details = BOX_SIZES.get(size);
+    	        System.out.println("- " + size + " | Dimensions: " + details.getDimensions() + " | Price: $" + details.getCost());
+    	    }
+
+    	    System.out.print("Enter the size of the box you want to create: ");
+    	    String inputSize = scanner.nextLine();
+    	    String size = normalizeSize(inputSize);
+
+    	    if (size == null || !BOX_SIZES.containsKey(size)) {
+    	        System.out.println("Invalid size.");
+    	        return;
+    	    }
+
+    	    if (!BOX_SIZES.containsKey(size)) {
+    	        System.out.println("Invalid size. Please try again.");
+    	        return;
+    	    }
+
+    	    BoxDetails template = BOX_SIZES.get(size);
+
+    	    System.out.print("Enter the contents of the box: ");
+    	    String contents = scanner.nextLine();
+
+    	    System.out.print("Enter the total value of the box's contents: $");
+    	    double totalValue = scanner.nextDouble();
+    	    scanner.nextLine(); // clear newline
+
+    	    String boxKey = uniqueId + "_" + size;
+
+    	    BoxDetails newBox = new BoxDetails(size, template.getDimensions(), template.getCost(), contents, totalValue);
+    	    boxes.put(boxKey, newBox);
+
+    	    System.out.println("Box created successfully!");
+
+    	    saveBoxesToCSV(boxKey, "Created");
+
+
+    }
+    private static String normalizeSize(String input) {
+        if (input == null) return null;
+        String lower = input.trim().toLowerCase();
+        switch (lower) {
+            case "small": return "Small";
+            case "medium": return "Medium";
+            case "large": return "Large";
+            default: return null;
+        }
+    }
+
+    private static void saveBoxesToCSV(String modifiedBoxKey, String action) {
+        try {
+            List<String> updatedLines = new ArrayList<>();
+            boolean headerAdded = false;
+            String targetUniqueId = modifiedBoxKey.split("_")[0];
+
+            try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split(",", -1); // keep empty values
+
+                    // Header row
+                    if (!headerAdded && line.toLowerCase().contains("boxkey")) {
+                        updatedLines.add(line);
+                        headerAdded = true;
+                        continue;
+                    }
+
+                    // Match the UniqueId column (11th index == 10)
+                    if (parts.length >= 12 && parts[10].equals(targetUniqueId)) {
+                        BoxDetails box = boxes.get(modifiedBoxKey);
+                        if (box != null) {
+                            String updatedLine = String.join(",", Arrays.asList(
+                                modifiedBoxKey,
+                                box.getSize(),
+                                box.getDimensions(),
+                                String.valueOf(box.getCost()),
+                                box.getContents(),
+                                String.valueOf(box.getTotalValue()),
+                                action,
+                                new SimpleDateFormat("MM/dd/yyyy HH:mm:ss").format(new Date()),
+                                parts[8], parts[9], parts[10], parts[11] // preserve auth info
+                            ));
+                            updatedLines.add(updatedLine);
+                            continue;
+                        }
+                    }
+
+                    // Preserve untouched lines
+                    updatedLines.add(line);
+                }
+            }
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(CSV_FILE_PATH))) {
+                for (String l : updatedLines) {
+                    writer.write(l);
+                    writer.newLine();
+                }
+            }
+
+            System.out.println("Box was successfully: " + action);
+        } catch (IOException e) {
+            System.out.println("Error saving to CSV: " + e.getMessage());
+        }
+    }
+
+
+
+
+
+
+
+    private static void modifyBoxContents(Scanner scanner, String uniqueId) {
+        System.out.println("\n=== Modify Box Contents ===");
+
+        // Find the box belonging to this user
+        String userBoxKey = null;
+        for (String boxKey : boxes.keySet()) {
+            if (boxKey.startsWith(uniqueId)) {
+                userBoxKey = boxKey;
+                break;
+            }
+        }
+
+        if (userBoxKey == null) {
+            System.out.println("You donâ€™t have a box to modify.");
+            return;
+        }
+
+        BoxDetails box = boxes.get(userBoxKey);
+
+        System.out.println("Current contents: " + box.getContents());
+        System.out.println("Current total value: $" + box.getTotalValue());
+
+        System.out.print("Enter new contents: ");
+        String newContents = scanner.nextLine();
+
+        System.out.print("Enter new total value: ");
+        double newValue = scanner.nextDouble();
+        scanner.nextLine(); // flush newline
+
+        box.setContents(newContents);
+        box.setTotalValue(newValue);
+
+        // Save updated box info with new action "Modified"
+        saveBoxesToCSV(userBoxKey, "Modified");
+
+
+
+    }
+
+   private static void grantAccessToUser(Scanner scanner, String uniqueId) {
+    String boxKey = boxes.keySet().stream()
+            .filter(key -> key.startsWith(uniqueId))
+            .findFirst().orElse(null);
+
+    if (boxKey == null) {
+        System.out.println("No box found for your ID.");
+        return;
+    }
+
+    String authUsername;
+    while (true) {
+        System.out.print("Enter a username to provide to an authorized user: ");
+        authUsername = scanner.nextLine().trim();
+
+        if (!isAuthUsernameTaken(authUsername)) break;
+
+        System.out.println("Username already taken. Try another.");
+    }
+
+    System.out.print("Enter a password for the authorized user: ");
+    String authPassword = scanner.nextLine().trim();
+
+    // Ask for permission level
+    System.out.print("Grant permission level (view/full): ");
+    String permission = scanner.nextLine().trim().toLowerCase();
+
+    while (!permission.equals("view") && !permission.equals("full")) {
+        System.out.print("Invalid input. Enter 'view' or 'full': ");
+        permission = scanner.nextLine().trim().toLowerCase();
+    }
+
+    updateAuthInfoInCSV(boxKey, authUsername, authPassword, permission);
+    System.out.println("Access granted successfully.");
+}
+
+    private static boolean isAuthUsernameTaken(String username) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length >= 10 && username.equals(parts[8].trim())) return true;
+            }
+        } catch (IOException e) {
+            System.out.println("Error checking username: " + e.getMessage());
+        }
+        return false;
+    }
+
+    private static void updateAuthInfoInCSV(String boxKey, String authUsername, String authPassword, String permission) {
+        List<String> updatedLines = new ArrayList<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length >= 11 && parts[0].equals(boxKey)) {
+                    if (parts.length == 11) {
+                        parts = Arrays.copyOf(parts, 12); // Add space for AuthPerm
+                        parts[11] = ""; // Init AuthPerm if missing
+                    }
+                    parts[8] = authUsername;   // Username
+                    parts[9] = authPassword;   // Password
+                    parts[11] = permission;    // Permission (view/full)
+                    line = String.join(",", parts);
+                }
+                updatedLines.add(line);
+            }
+
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(CSV_FILE_PATH))) {
+                for (String l : updatedLines) {
+                    writer.write(l);
+                    writer.newLine();
+                }
+            }
+
+        } catch (IOException e) {
+            System.out.println("Error updating CSV: " + e.getMessage());
+        }
+    }
+
+
+    private static void viewAuthorizedUsers(String uniqueId) {
+        for (String boxKey : boxes.keySet()) {
+            if (boxKey.startsWith(uniqueId)) {
+                try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        String[] parts = line.split(",");
+                        if (parts.length >= 11 && parts[0].equals(boxKey)) {
+                            if (parts.length == 11) {
+                                parts = Arrays.copyOf(parts, 12); // Add room for permission if missing
+                                parts[11] = ""; // Default empty permission
+                            }
+
+                            System.out.println("Authorized Username: " + parts[8]);
+                            System.out.println("Authorized Password: " + parts[9]);
+                            System.out.println("Permission Level: " + parts[11]); // Now safe
+                            return;
+                        }
+                    }
+                } catch (IOException e) {
+                    System.out.println("Error reading authorized user: " + e.getMessage());
+                }
+            }
+        }
+        System.out.println("No authorized users found.");
+    }
+
+
+    static void loginAsAuthorizedUser(Scanner scanner) {
+        System.out.println("=== Authorized User Login ===");
+        System.out.print("Enter authorized username: ");
+        String username = scanner.nextLine();
+
+        System.out.print("Enter password: ");
+        String password = scanner.nextLine();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length >= 12 && parts[8].equals(username) && parts[9].equals(password)) {
+                    System.out.println("Access granted...");
+                    String uniqueId = parts[10];
+                    String permission = parts[11].trim().toLowerCase();
+                    authorizedUserMenu(uniqueId, permission);
+                    return;
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error during login: " + e.getMessage());
+        }
+
+        System.out.println("Invalid authorized credentials.");
+    }
+
+
+private static void authorizedUserMenu(String uniqueId, String permission) {
+    Scanner scanner = new Scanner(System.in);
+    while (true) {
+        System.out.println("\n--- Authorized User Menu ---");
+        System.out.println("1. View Box Details");
+        if (permission.equals("full")) {
+            System.out.println("2. Modify Box Contents");
+        }
+        System.out.println("0. Logout");
+        System.out.print("Choose an option: ");
+        String choice = scanner.nextLine();
+
+        switch (choice) {
+            case "1":
+                viewBoxDetails(uniqueId);
+                break;
+            case "2":
+                if (permission.equals("full")) {
+                    modifyBoxContents(scanner, uniqueId);
+                } else {
+                    System.out.println("You do not have permission to modify.");
+                }
+                break;
+            case "0":
+                return;
+            default:
+                System.out.println("Invalid choice.");
+        }
+    }
+}
+
+
+    static class BoxDetails {
+        private String size, dimensions, contents = "";
+        private double cost, totalValue = 0.0;
+
+        public BoxDetails(String size, String dimensions, double cost) {
+            this(size, dimensions, cost, "", 0.0);
+        }
+
+        public void setSize(String newSize) {
+			this.size = newSize;
+		}
+
+		public void setCost(double newcost) {
+
+			this.cost = newcost;
+		}
+
+		public void setDimensions(String newdimensions) {
+			this.dimensions = newdimensions;
+		}
+
+		public BoxDetails(String size, String dimensions, double cost, String contents, double totalValue) {
+            this.size = size;
+            this.dimensions = dimensions;
+            this.cost = cost;
+            this.contents = contents;
+            this.totalValue = totalValue; }
+
+        public String getSize() { return size; }
+        public String getDimensions() { return dimensions; }
+        public double getCost() { return cost; }
+        public String getContents() { return contents; }
+        public double getTotalValue() { return totalValue; }
+        public void setContents(String contents) { this.contents = contents; }
+        public void setTotalValue(double totalValue) { this.totalValue = totalValue; }
+    }
+}
