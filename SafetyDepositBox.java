@@ -4,16 +4,28 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
 import java.util.stream.Collectors;
+import java.util.Scanner;
 
-public class SafetyDepositBox {
+ class SafetyDepositBox {
 
     private static Map<String, BoxDetails> boxes = new HashMap<>();
     private static final Map<String, BoxDetails> BOX_SIZES = new HashMap<>();
-    private static final String CSV_FILE_PATH = "src//BankDepositBox.csv";
+    private static final String CSV_FILE_PATH = "src/BankDepositBox.csv";
     private static final Map<String, Set<String>> authorizedUsers = new HashMap<>(); // BoxKey -> Set of authorized usernames
     private static final SimpleDateFormat DOB_FORMAT = new SimpleDateFormat("MMddyyyy");
     private static final Map<String, String[]> userInfoMap = new HashMap<>();
-    private static String username;
+    private  String Firstname;
+    private  String Lastname;
+    private  String password;
+    private String dob;
+    private String SSN;
+    private String userID;
+    static void AddUsers(String firstname, String lastname, String password, String dob, String SSN, String userID) {
+
+        userInfoMap.put(userID, new String[]{firstname, lastname, dob, SSN, password});
+
+    }
+
 
     static {
         BOX_SIZES.put("Small", new BoxDetails("Small", "5\" x 5\" x 21.5\"", 50.0));
@@ -23,12 +35,9 @@ public class SafetyDepositBox {
         loadBoxesFromCSV();
     }
 
-    static {
-        userInfoMap.put("123456", new String[]{"Manav", "Shah", "12182008", "123456789", "123"});
-        userInfoMap.put("654321", new String[]{"Jane", "Doe", "01011990", "987654321", "abc"});
-    }
 
-    
+
+
     private static boolean isValidDate(String dateStr) {
         if (dateStr == null || dateStr.length() != 8) {
             return false;
@@ -94,7 +103,7 @@ public class SafetyDepositBox {
         System.out.println("Invalid credentials. Please try again.");
         return null;
     }
-    
+
     private static boolean isUniqueIdInCSV(String uniqueId) {
         try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
             String line = reader.readLine(); // Skip header
@@ -109,12 +118,12 @@ public class SafetyDepositBox {
         }
         return false;
     }
-    
+
 
     private static void loadBoxesFromCSV() {
         try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE_PATH))) {
-            
-            
+
+
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
@@ -129,7 +138,7 @@ public class SafetyDepositBox {
                         BoxDetails box = new BoxDetails(size, dimensions, cost, contents, totalValue);
                         boxes.put(boxKey, box);
                     } catch (NumberFormatException e) {
-                        
+
                     }
                 }
             }
@@ -259,7 +268,7 @@ public class SafetyDepositBox {
     }
 
     private static void createBox(Scanner scanner, String uniqueId) {
-    	
+
     	for (String key : boxes.keySet()) {
     	    if (key.startsWith(uniqueId + "_")) {
     	        System.out.println("You already have a box. Cannot create another one.");
@@ -318,7 +327,7 @@ public class SafetyDepositBox {
             default: return null;
         }
     }
-  
+
     private static void saveBoxesToCSV(String modifiedBoxKey, String action) {
         try {
             List<String> updatedLines = new ArrayList<>();
@@ -378,7 +387,7 @@ public class SafetyDepositBox {
 
 
 
-  
+
 
 
     private static void modifyBoxContents(Scanner scanner, String uniqueId) {
@@ -415,11 +424,11 @@ public class SafetyDepositBox {
 
         // Save updated box info with new action "Modified"
         saveBoxesToCSV(userBoxKey, "Modified");
- 
 
-        
+
+
     }
-   
+
    private static void grantAccessToUser(Scanner scanner, String uniqueId) {
     String boxKey = boxes.keySet().stream()
             .filter(key -> key.startsWith(uniqueId))
@@ -468,7 +477,7 @@ public class SafetyDepositBox {
         }
         return false;
     }
-    
+
     private static void updateAuthInfoInCSV(String boxKey, String authUsername, String authPassword, String permission) {
         List<String> updatedLines = new ArrayList<>();
 
@@ -603,7 +612,7 @@ private static void authorizedUserMenu(String uniqueId, String permission) {
 		}
 
 		public void setCost(double newcost) {
-			
+
 			this.cost = newcost;
 		}
 
@@ -615,7 +624,7 @@ private static void authorizedUserMenu(String uniqueId, String permission) {
             this.size = size;
             this.dimensions = dimensions;
             this.cost = cost;
-            this.contents = contents;  
+            this.contents = contents;
             this.totalValue = totalValue; }
 
         public String getSize() { return size; }
@@ -631,11 +640,14 @@ private static void authorizedUserMenu(String uniqueId, String permission) {
 
 
 
-import java.util.Scanner;
+
 
 public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+        SafetyDepositBox.AddUsers("Souren","KC","k","01022007","123456789","123445");
+        SafetyDepositBox.AddUsers("Manav", "Shah", "123", "12182008", "123456789", "123456");
+        SafetyDepositBox.AddUsers("Jane", "Doe", "abc", "01011990", "987654321", "654321");
         while (true) {
             System.out.println("\n=== Safety Deposit Box System ===");
             System.out.println("1. Login");
