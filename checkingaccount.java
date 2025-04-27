@@ -96,7 +96,7 @@ public class CheckingAccountApp {
             System.out.print("Do you want overdraft protection? (true/false): ");
             String input = scan.nextLine().trim().toLowerCase();
             if (input.equals("true")) {
-                System.out.print("Enter existing checking account number: ");
+                System.out.print("Enter existing savings account number: ");
                 String checkingAccNum = scan.nextLine().trim();
                 CheckingAccount linked = CheckingAccount.loadByAccountNumber(checkingAccNum);
 
