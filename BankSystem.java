@@ -11,7 +11,7 @@ public class BankSystem {
         ensureFile("account_info.csv");
 
         while (true) {
-            // Menu options
+// Menu options
             System.out.println("Choose an option:");
             System.out.println("1. View existing account info");
             System.out.println("2. Create a new account");
