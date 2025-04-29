@@ -374,5 +374,71 @@ class CheckingAccount {
     public String getUniqueID() {
         return uniqueID;
     }
+    
+    public static String getRowByUniqueID(String uniqueID) {
+        File file = new File(CSV_FILE);
+        if (!file.exists()) return null;
 
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            br.readLine(); // skip header
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length >= 8 && parts[0].equals(uniqueID)) {
+                    return line;
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading CSV while searching by uniqueID.");
+            e.printStackTrace();
+        }
+        return null; // Not found
+    }
+    public void setBalance(double newBalance) {
+        // Update the internal balance variable
+        this.balance = newBalance;
+        this.lastTransactionDate = new Date(); // Update last transaction date
+
+        // Read and update CSV file
+        File file = new File(CSV_FILE);
+        List<String> lines = new ArrayList<>();
+        boolean updated = false;
+
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            String header = br.readLine();
+            lines.add(header); // Add header
+
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length >= 8 && parts[0].equals(this.uniqueID)) {
+                    // Update balance in the matching row
+                    parts[3] = String.format("%.2f", newBalance); // Update balance (4th column)
+                    line = String.join(",", parts); // Rebuild the row with the updated balance
+                    updated = true;
+                }
+                lines.add(line); // Add the row (updated or unchanged)
+            }
+
+            if (!updated) {
+                System.out.println("Error: Account with uniqueID " + this.uniqueID + " not found.");
+                return;
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading file while updating balance.");
+            e.printStackTrace();
+        }
+
+        // Write the updated lines back to the CSV file
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(file))) {
+            for (String l : lines) {
+                bw.write(l);
+                bw.newLine();
+            }
+            System.out.println("[✓] Balance updated in CSV file.");
+        } catch (IOException e) {
+            System.out.println("Error writing file during balance update.");
+            e.printStackTrace();
+        }
+    }
 }
