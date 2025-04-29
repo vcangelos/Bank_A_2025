@@ -11,7 +11,7 @@ public class BankSystem {
         ensureFile("account_info.csv");
 
         while (true) {
-// menu options
+            // Menu options
             System.out.println("Choose an option:");
             System.out.println("1. View existing account info");
             System.out.println("2. Create a new account");
@@ -23,12 +23,12 @@ public class BankSystem {
                 case "1" -> viewAccountInfo(scanner);
                 case "2" -> createNewAccount(scanner);
                 case "3" -> closeAccount(scanner);
-                default  -> System.out.println("Invalid option. Please try again.");
+                default -> System.out.println("Invalid option. Please try again.");
             }
         }
     }
 
-// view account info -needs name and PIN
+// View account info - needs name and PIN
     private static void viewAccountInfo(Scanner sc) {
         System.out.print("Enter account holder's name: ");
         String holderName = sc.nextLine().trim();
@@ -36,7 +36,7 @@ public class BankSystem {
         System.out.print("Enter your 4-digit PIN: ");
         String enteredPin = sc.nextLine().trim();
 
-// read CSV file containing account info
+// Read CSV file containing account info
         try (Scanner csv = new Scanner(new File("account_info.csv"))) {
             boolean found = false;
 
@@ -46,7 +46,7 @@ public class BankSystem {
                 if (f.length < 9) continue;
 
                 String accountHolder = f[2].trim();
-                String storedPin = f[8].trim(); 
+                String storedPin = f[8].trim();
 
 // If info matches, display account info
                 if (accountHolder.equalsIgnoreCase(holderName)) {
@@ -75,48 +75,44 @@ public class BankSystem {
         waitForBack(sc);
     }
 
-// new account
+// Create new account
     private static void createNewAccount(Scanner sc) {
         System.out.println("Provide the following information to create a new account:");
-        
 
         System.out.print("Account holder name: ");
         String holderName = sc.nextLine();
-
 
         String accountNumber = "4" + String.format("%015d", (long) (Math.random() * 1_000_000_000_000_000L));
 
         double balance = 0.0;
         boolean overdraftProtection = false;
-        double overdraftLimit = 0.0; 
+        double overdraftLimit = 0.0;
         String dateOpened = java.time.LocalDate.now().toString();
         String lastTransactionDate = "None";
-
 
         String cvv = String.format("%03d", (int) (Math.random() * 1000));
         String expiryDate = java.time.LocalDate.now().plusYears(5).format(java.time.format.DateTimeFormatter.ofPattern("MM/yy"));
         String fourDigitCode = String.format("%04d", (int) (Math.random() * 10000));
 
-// user set pin
+// User set pin
         System.out.print("Set your 4-digit Account Security PIN: ");
         String pin = sc.nextLine();
 
- // Write new account to CSV
-        int id = nextUniqueID();  
+// Write new account to CSV
+        int id = nextUniqueID();
         writeAccountInfoToCSV(id, accountNumber, holderName, balance, overdraftProtection, overdraftLimit, dateOpened, lastTransactionDate, pin);
 
-        // Display the newly created account's card details
+// Display the newly created account's card details
         System.out.println("\nYour new card details:");
         System.out.println("Account Number: " + accountNumber);
         System.out.println("CVV: " + cvv);
         System.out.println("Expiry Date: " + expiryDate);
         System.out.println("4-Digit Code: " + fourDigitCode);
 
-
         waitForBack(sc);
     }
-    
-// close account
+
+    // Close account
     private static void closeAccount(Scanner sc) {
         // Prompt for account holder's name and PIN
         System.out.print("Enter account holder's name: ");
@@ -160,16 +156,15 @@ public class BankSystem {
             System.out.println("Account closed successfully.");
         }
 
-
         waitForBack(sc);
     }
 
-//write the new account info to CSV
-    private static void writeAccountInfoToCSV(int id, String accountNumber, String holderName, double balance, 
-                                               boolean overdraftProtection, double overdraftLimit, String dateOpened, 
+// Write the new account info to CSV
+    private static void writeAccountInfoToCSV(int id, String accountNumber, String holderName, double balance,
+                                               boolean overdraftProtection, double overdraftLimit, String dateOpened,
                                                String lastTransactionDate, String pin) {
         try (PrintWriter w = new PrintWriter(new FileWriter("account_info.csv", true))) {
-// Write account data in CSV format
+            // Write account data in CSV format
             w.println(id + "," + accountNumber + "," + holderName + "," + balance + "," +
                       overdraftProtection + "," + overdraftLimit + "," + dateOpened + "," + lastTransactionDate + "," + pin);
         } catch (IOException e) {
@@ -177,19 +172,19 @@ public class BankSystem {
         }
     }
 
-
+// Get next unique ID for new accounts
     private static int nextUniqueID() {
-        int max = 1000;  
+        int max = 1000;
         try (Scanner csv = new Scanner(new File("account_info.csv"))) {
             while (csv.hasNextLine()) {
                 String[] f = csv.nextLine().split(",");
                 if (f.length >= 1) max = Math.max(max, Integer.parseInt(f[0]));
             }
         } catch (IOException ignored) { }
-        return max + 1;  // Return the next unique ID
+        return max + 1;  
     }
 
-// "back" to return to main menu
+// "Back" to return to the main menu
     private static void waitForBack(Scanner sc) {
         System.out.println("\nType 'back' to return to the main menu.");
         while (!sc.nextLine().trim().equalsIgnoreCase("back"))
@@ -200,9 +195,62 @@ public class BankSystem {
     private static void ensureFile(String name) {
         try {
             File f = new File(name);
-            if (!f.exists()) f.createNewFile();  
+            if (!f.exists()) f.createNewFile();
         } catch (IOException e) {
             System.out.println("Error ensuring file existence: " + e.getMessage());
+        }
+    }
+
+
+    public static String getRowByUniqueID(String uniqueID) {
+        try (Scanner csv = new Scanner(new File("account_info.csv"))) {
+            while (csv.hasNextLine()) {
+                String line = csv.nextLine();
+                String[] fields = line.split(",");
+                if (fields.length >= 1 && fields[0].equals(uniqueID)) {
+                    return line; 
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading CSV: " + e.getMessage());
+        }
+        return null;
+    }
+
+// Set balance in the CSV (for backend interaction)
+    public static void setBalance(double newBalance, String uniqueID) {
+        List<String> lines = new ArrayList<>();
+        boolean found = false;
+
+// Read the CSV and find the row to update
+        try (Scanner csv = new Scanner(new File("account_info.csv"))) {
+            while (csv.hasNextLine()) {
+                String line = csv.nextLine();
+                String[] fields = line.split(",");
+                if (fields.length >= 1 && fields[0].equals(uniqueID)) {
+// Found the row to update, replace the balance field
+                    found = true;
+                    fields[3] = String.format("%.2f", newBalance); 
+                    line = String.join(",", fields);
+                }
+                lines.add(line); 
+            }
+        } catch (IOException e) {
+            System.out.println("Error reading CSV: " + e.getMessage());
+        }
+
+// If the account was found and balance was updated, rewrite the CSV
+        if (found) {
+            try (PrintWriter writer = new PrintWriter(new FileWriter("account_info.csv"))) {
+                for (String line : lines) {
+                    writer.println(line); 
+                }
+            } catch (IOException e) {
+                System.out.println("Error writing CSV: " + e.getMessage());
+            }
+            System.out.println("Balance updated successfully.");
+        } else {
+            System.out.println("Account not found with the given unique ID.");
         }
     }
 }
