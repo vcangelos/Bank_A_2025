@@ -1,20 +1,20 @@
+import java.util.Scanner;
 import java.io.*;
 import java.net.*;
-import java.util.*;
-
-public class FXBank {
-    static final String USERS_FILE = "users.csv";
-    static final String TRANSACTIONS_FILE = "transactions.csv";
-    static final String[] CURRENCIES = {"USD", "EUR", "GBP", "CAD", "INDR"};
-    static final double FEE_PERCENTAGE = 2.5;
-    static final String API_KEY = "4b50e36e9afb0ce012dfa2d1"; // Replace with your actual API key
-    static final Scanner scanner = new Scanner(System.in);
-
+import java.util.*;//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
+// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+public class Main {
     public static void main(String[] args) {
-        initializeFiles();
+        Scanner scanner = new Scanner(System.in);
+        //TIP Press <shortcut actionId="ShowIntentionActions"/> with your caret at the highlighted text
+        // to see how IntelliJ IDEA suggests fixing it.
+        FXBank.initializeFiles();
         System.out.println("Welcome to Virtual FX Bank");
+        String firstname="Souren";
+        String lastname="KC";
+        String SSN="123456789";
 
-        if (!authenticateUser()) {
+        if (!FXBank.authenticateUser(firstname, lastname, SSN)) {
             System.out.println("Authentication failed.");
             return;
         }
@@ -27,9 +27,9 @@ public class FXBank {
             System.out.print("Choose option: ");
             String input = scanner.nextLine();
             if (input.equals("1")) {
-                showRates();
+                FXBank.showRates();
             } else if (input.equals("2")) {
-                performConversion();
+                FXBank.performConversion();
             } else if (input.equals("3")) {
                 System.out.println("Thank you for using FX Bank!");
                 break;
@@ -38,17 +38,25 @@ public class FXBank {
             }
         }
     }
+}
+
+
+
+
+
+
+
+
+ class FXBank {
+    static final String TRANSACTIONS_FILE = "src/transactions.csv";
+    static final String[] CURRENCIES = {"USD", "EUR", "GBP", "CAD", "INDR"};
+    static final double FEE_PERCENTAGE = 2.5;
+    static final String API_KEY = "4b50e36e9afb0ce012dfa2d1"; // Replace with your actual API key
+    static final Scanner scanner = new Scanner(System.in);
+
 
     static void initializeFiles() {
         try {
-            File usersFile = new File(USERS_FILE);
-            if (!usersFile.exists()) {
-                FileWriter writer = new FileWriter(usersFile);
-                writer.write("FirstName,LastName,SSN\n");
-                writer.write("John,Doe,123456789\n");
-                writer.close();
-                System.out.println("Created users.csv with a sample user.");
-            }
 
             File transactionsFile = new File(TRANSACTIONS_FILE);
             if (!transactionsFile.exists()) {
@@ -62,28 +70,19 @@ public class FXBank {
         }
     }
 
-    static boolean authenticateUser() {
+    static boolean authenticateUser(String Firstname, String Lastname,String SSN) {
         System.out.print("Enter First Name: ");
         String firstName = scanner.nextLine();
         System.out.print("Enter Last Name: ");
         String lastName = scanner.nextLine();
         System.out.print("Enter SSN: ");
         String ssn = scanner.nextLine();
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(USERS_FILE))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.trim().isEmpty() || line.startsWith("FirstName")) continue;
-                String[] parts = line.split(",");
-                if (parts.length == 3 && parts[0].equalsIgnoreCase(firstName) &&
-                        parts[1].equalsIgnoreCase(lastName) && parts[2].equals(ssn)) {
-                    return true;
-                }
-            }
-        } catch (IOException e) {
-            System.out.println("User lookup error: " + e.getMessage());
+        if(firstName.equals(firstName) && lastName.equals(lastName) && ssn.equals(SSN)) {
+            return true;
+        }else{
+            return false;
         }
-        return false;
+
     }
 
     static void showRates() {
